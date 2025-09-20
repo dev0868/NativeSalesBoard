@@ -8,11 +8,13 @@ import {
   TextInput 
 } from 'react-native';
 import { View, ScrollView, Dimensions } from 'react-native';
+import DocumentModal from '../DocumentModal';
 
 const FollowUpCards = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [notes, setNotes] = useState('Solo cultural trip to explore Japanese traditions. Interested in temple visits and local cuisine experiences.');
   const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [isDocumentModalVisible, setIsDocumentModalVisible] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const screenWidth = Dimensions.get('window').width;
   const cardWidth = screenWidth - 32; // Account for margins
@@ -50,7 +52,11 @@ const FollowUpCards = () => {
   });
 
   const handleActionPress = (action: string) => {
-    Alert.alert('Action', `${action} pressed`, [{ text: 'OK' }]);
+    if (action === 'Documents') {
+      setIsDocumentModalVisible(true);
+    } else {
+      Alert.alert('Action', `${action} pressed`, [{ text: 'OK' }]);
+    }
   };
 
   const handleSaveNotes = () => {
@@ -59,6 +65,7 @@ const FollowUpCards = () => {
   };
 
   return (
+    <>
     <View className="bg-white rounded-2xl mb-4 shadow-sm overflow-hidden h-auto">
       <View {...panResponder.panHandlers}>
         <ScrollView
@@ -284,6 +291,13 @@ const FollowUpCards = () => {
         <View className={`w-2 h-2 rounded-full mx-1 ${currentPage === 2 ? 'bg-purple-600' : 'bg-gray-300'}`} />
       </View>
     </View>
+    
+    {/* Document Modal */}
+    <DocumentModal
+      visible={isDocumentModalVisible}
+      onClose={() => setIsDocumentModalVisible(false)}
+    />
+    </>
   );
 };
 

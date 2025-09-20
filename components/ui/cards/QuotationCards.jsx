@@ -3,10 +3,12 @@ import React, { useState, useRef } from 'react'
 import { Text, TouchableOpacity, Animated, PanResponder, Alert } from 'react-native'
 import { View, ScrollView, Dimensions } from 'react-native'
 import QuotationModal from '../QuotationModal'
+import LastQuotesModal from '../LastQuotesModal'
 
 const QuotationCards = () => {
     const [currentPage, setCurrentPage] = useState(0);
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [isLastQuotesModalVisible, setIsLastQuotesModalVisible] = useState(false);
     const scrollViewRef = useRef(null);
     const screenWidth = Dimensions.get('window').width;
     const cardWidth = screenWidth - 32; // Account for margins
@@ -66,10 +68,27 @@ const QuotationCards = () => {
         setIsModalVisible(true);
     };
 
+    const handleLastQuotesClick = () => {
+        setIsLastQuotesModalVisible(true);
+    };
+
+    const handleUseQuote = (quote) => {
+        console.log('Using quote:', quote);
+        Alert.alert(
+            'Quote Selected',
+            `You have selected the quote for ${quote.destination} (${quote.tripId}) with total amount ₹${quote.total.toLocaleString()}`,
+            [{ text: 'OK' }]
+        );
+        // Here you could navigate to edit the quote or create a new quotation based on this quote
+    };
+
     const QuotaionButton = () => {
         return (
             <View className="flex-row justify-between">
-                <TouchableOpacity className="bg-purple-100 rounded-lg px-4 py-2 flex-1 mr-2">
+                <TouchableOpacity 
+                    className="bg-purple-100 rounded-lg px-4 py-2 flex-1 mr-2"
+                    onPress={handleLastQuotesClick}
+                >
                     <Text className="text-purple-600 font-medium text-center">Last 10 Quotes</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
@@ -202,6 +221,12 @@ const QuotationCards = () => {
                 children: '1',
                 budget: '85000',
             }}
+        />
+        
+        <LastQuotesModal
+            visible={isLastQuotesModalVisible}
+            onClose={() => setIsLastQuotesModalVisible(false)}
+            onUseQuote={handleUseQuote}
         />
         </>
     );

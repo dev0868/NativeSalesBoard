@@ -27,7 +27,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Dashboard",
+          title: "Quotations",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons 
               name={focused ? "grid" : "grid-outline"} 
@@ -55,16 +55,11 @@ export default function TabLayout() {
         options={{
           title: "",
           tabBarIcon: ({ color }) => (
-            <View className="bg-purple-600 rounded-full p-3 -mt-6 shadow-lg">
-              <Ionicons name="add" size={28} color="white" />
+            <View className="bg-purple-500 rounded-full p-3 -mt-6 shadow-lg">
+              <Ionicons name="add" size={28} color={color} />
             </View>
           ),
-          tabBarButton: (props) => (
-            <TouchableOpacity
-              onPress={props.onPress}
-              className="flex-1 items-center justify-center"
-            />
-          ),
+         
         }}
       />
       <Tabs.Screen

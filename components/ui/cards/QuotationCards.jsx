@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons'
 import React, { useState, useRef } from 'react'
-import { Text, TouchableOpacity, Animated, PanResponder } from 'react-native'
+import { Text, TouchableOpacity, Animated, PanResponder, Alert } from 'react-native'
 import { View, ScrollView, Dimensions } from 'react-native'
+import QuotationModal from '../QuotationModal'
 
 const QuotationCards = () => {
     const [currentPage, setCurrentPage] = useState(0);
+    const [isModalVisible, setIsModalVisible] = useState(false);
     const scrollViewRef = useRef(null);
     const screenWidth = Dimensions.get('window').width;
     const cardWidth = screenWidth - 32; // Account for margins
@@ -41,19 +43,46 @@ const QuotationCards = () => {
         },
     });
 
+    const handleQuotationSubmit = (quotationData) => {
+        console.log('Quotation submitted:', quotationData);
+        Alert.alert(
+            'Success',
+            'Quotation created successfully!',
+            [{ text: 'OK' }]
+        );
+    };
+
+    const handleCreateQuotation = () => {
+        // Pre-fill form with customer data from the card
+        const initialData = {
+            customerName: 'Rajesh Kumar',
+            contactNumber: '9876543210',
+            destination: 'Thailand',
+            departure: 'Mumbai',
+            adults: '2',
+            children: '1',
+            budget: '85000',
+        };
+        setIsModalVisible(true);
+    };
+
     const QuotaionButton = () => {
         return (
             <View className="flex-row justify-between">
                 <TouchableOpacity className="bg-purple-100 rounded-lg px-4 py-2 flex-1 mr-2">
                     <Text className="text-purple-600 font-medium text-center">Last 10 Quotes</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className="bg-green-500 rounded-lg px-4 py-2 flex-1 ml-2">
-                    <Text className="text-white font-medium text-center">Follow Up</Text>
+                <TouchableOpacity 
+                    className="bg-green-500 rounded-lg px-4 py-2 flex-1 ml-2"
+                    onPress={handleCreateQuotation}
+                >
+                    <Text className="text-white font-medium text-center">Create Quote</Text>
                 </TouchableOpacity>
             </View>
         )
     }
     return (
+        <>
         <View className="bg-white rounded-2xl mb-4 shadow-sm overflow-hidden h-auto">
             <View {...panResponder.panHandlers}>
                 <ScrollView
@@ -159,6 +188,22 @@ const QuotationCards = () => {
                 <View className={`w-2 h-2 rounded-full mx-1 ${currentPage === 1 ? 'bg-purple-600' : 'bg-gray-300'}`} />
             </View>
         </View>
+        
+        <QuotationModal
+            visible={isModalVisible}
+            onClose={() => setIsModalVisible(false)}
+            onSubmit={handleQuotationSubmit}
+            initialData={{
+                customerName: 'Rajesh Kumar',
+                contactNumber: '9876543210',
+                destination: 'Thailand',
+                departure: 'Mumbai',
+                adults: '2',
+                children: '1',
+                budget: '85000',
+            }}
+        />
+        </>
     );
 }
 

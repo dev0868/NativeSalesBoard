@@ -56,7 +56,7 @@ export default function TabLayout() {
           title: "",
           tabBarIcon: ({ color }) => (
             <View className="bg-purple-500 rounded-full p-3 -mt-6 shadow-lg">
-              <Ionicons name="add" size={28} color={color} />
+              <Ionicons name="add" size={28} color="#fff" />
             </View>
           ),
          

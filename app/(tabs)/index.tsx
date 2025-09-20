@@ -29,9 +29,7 @@ export default function HomeScreen() {
       showsVerticalScrollIndicator={false}
       
     />
-         <TouchableOpacity className="absolute bottom-0 right-4 bg-purple-600 rounded-full p-4 shadow-lg">
-        <Ionicons name="add" size={24} color="white" />
-      </TouchableOpacity>
+        
     </View>
   );
 }

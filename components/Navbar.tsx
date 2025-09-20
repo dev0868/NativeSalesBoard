@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface NavbarProps {
   title: string;
@@ -24,10 +25,13 @@ export default function Navbar({
   const insets = useSafeAreaInsets();
 
   return (
-    <View 
-      className="bg-gradient-to-br from-purple-600 to-purple-800 rounded-b-3xl px-4 pb-6"
-      style={{ paddingTop: insets.top + 16 }}
-    >
+    <LinearGradient
+    colors={['#7c3aed', '#5b21b6']} // from purple-600 to purple-800
+    start={{ x: 0, y: 0 }}
+    end={{ x: 1, y: 1 }}
+    className="rounded-b-3xl px-4 pb-6"
+    style={{ paddingTop: insets.top + 16 }}
+  >
       {/* Top Row with Search/Back and Notifications */}
       <View className="flex-row items-center justify-between mb-4">
         {showSearch && !showBack && (
@@ -73,6 +77,6 @@ export default function Navbar({
           <Text className="text-white/80 text-sm mt-1">{subtitle}</Text>
         )}
       </View>
-    </View>
+    </LinearGradient>
   );
 }

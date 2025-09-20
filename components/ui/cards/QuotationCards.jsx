@@ -193,7 +193,7 @@ const QuotationCards = () => {
                                 <Text className="text-gray-900 font-medium min-h-[9rem]">Vegetarian meals, Airport transfers Airport transfersAirport transfersAirport transfersAirport transfersAirport transfersAirport transfers</Text>
                             </View>
                         </View>
-                        <br />
+                 
 
                         <QuotaionButton />
 

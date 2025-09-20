@@ -55,7 +55,7 @@ export default function TabLayout() {
         options={{
           title: "",
           tabBarIcon: ({ color }) => (
-            <View className="bg-purple-500 rounded-full p-3 -mt-6 shadow-lg">
+            <View className="bg-purple-500 rounded-full w-12 h-12  flex justify-center items-center shadow-lg">
               <Ionicons name="add" size={28} color="#fff" />
             </View>
           ),

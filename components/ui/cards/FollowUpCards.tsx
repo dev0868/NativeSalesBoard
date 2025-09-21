@@ -9,12 +9,14 @@ import {
 } from 'react-native';
 import { View, ScrollView, Dimensions } from 'react-native';
 import DocumentModal from '../DocumentModal';
+import InvoiceModal from '../InvoiceModal';
 
 const FollowUpCards = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [notes, setNotes] = useState('Solo cultural trip to explore Japanese traditions. Interested in temple visits and local cuisine experiences.');
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [isDocumentModalVisible, setIsDocumentModalVisible] = useState(false);
+  const [isInvoiceModalVisible, setIsInvoiceModalVisible] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const screenWidth = Dimensions.get('window').width;
   const cardWidth = screenWidth - 32; // Account for margins
@@ -54,6 +56,8 @@ const FollowUpCards = () => {
   const handleActionPress = (action: string) => {
     if (action === 'Documents') {
       setIsDocumentModalVisible(true);
+    } else if (action === 'Invoices') {
+      setIsInvoiceModalVisible(true);
     } else {
       Alert.alert('Action', `${action} pressed`, [{ text: 'OK' }]);
     }
@@ -296,6 +300,12 @@ const FollowUpCards = () => {
     <DocumentModal
       visible={isDocumentModalVisible}
       onClose={() => setIsDocumentModalVisible(false)}
+    />
+    
+    {/* Invoice Modal */}
+    <InvoiceModal
+      visible={isInvoiceModalVisible}
+      onClose={() => setIsInvoiceModalVisible(false)}
     />
     </>
   );

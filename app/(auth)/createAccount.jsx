@@ -211,18 +211,15 @@ const CreateAccountPage = () => {
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(3)) {
-      Alert.alert('Missing Information', 'Please fill in all required fields.');
-      return;
-    }
-    
     try {
-      // Clear saved form data after successful submission
-      await clearSavedData();
-      Alert.alert('Success', 'Account created successfully!');
-      router.replace('/(tabs)');
+      // Save the final form data
+      await AsyncStorage.setItem('createAccountFormData', JSON.stringify(formData));
+      
+      // Navigate to payment page
+      router.push('/(auth)/PaymentGateway/payment');
     } catch (error) {
-      Alert.alert('Error', 'Something went wrong. Please try again.');
+      Alert.alert('Error', 'Failed to proceed to payment. Please try again.');
+      console.error('Submit error:', error);
     }
   };
 

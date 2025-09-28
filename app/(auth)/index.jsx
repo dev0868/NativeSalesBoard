@@ -5,7 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useState, useRef } from "react";
 
-const CreateAccount = () => {
+const OnBoardingPage = () => {
   const insets = useSafeAreaInsets();
   const { width } = Dimensions.get('window');
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -49,7 +49,7 @@ const CreateAccount = () => {
       >
         <View className="flex-row items-center justify-between">
           <Text className="text-xl font-semibold text-white">logo</Text>
-          <Pressable onPress={handleGetStarted} className="px-4 py-2 rounded-full bg-white/20">
+          <Pressable onPress={()=>router.replace("/(auth)/createAccount")} className="px-4 py-2 rounded-full bg-white/20">
             <Text className="text-white font-medium">Create Account</Text>
           </Pressable>
         </View>
@@ -108,4 +108,4 @@ const CreateAccount = () => {
   );
 };
 
-export default CreateAccount;
+export default OnBoardingPage;

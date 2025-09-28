@@ -1,7 +1,10 @@
-import { View, Text, TouchableOpacity, TextInput } from "react-native";
+import { View, Text, TouchableOpacity, TextInput, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Updates from "expo-updates";
+import { router } from "expo-router";
 
 interface NavbarProps {
   title: string;
@@ -35,14 +38,14 @@ export default function Navbar({
       {/* Top Row with Search/Back and Notifications */}
       <View className="flex-row items-center justify-between mb-4">
         {showSearch && !showBack && (
-          <View className="flex-row items-center bg-white/20 rounded-full px-4 py-3 flex-1 mr-4">
+          <Pressable onPress={async() =>  await   AsyncStorage.removeItem("createAccount") } className="flex-row items-center bg-white/20 rounded-full px-4 py-3 flex-1 mr-4">
             <Ionicons name="search" size={20} color="white" />
             <TextInput
               placeholder="Search destinations"
               placeholderTextColor="rgba(255,255,255,0.7)"
               className="text-white ml-2 flex-1"
             />
-          </View>
+          </Pressable>
         )}
 
         {showBack && (
@@ -58,7 +61,24 @@ export default function Navbar({
 
         {showNotifications && (
           <TouchableOpacity 
-            onPress={onNotificationPress}
+            onPress={async () => {
+              try {
+                await AsyncStorage.removeItem("createAccount");
+                
+                // Check if we're in development or production
+                if (__DEV__) {
+                  // In development, use router navigation
+                  router.replace("/(auth)");
+                } else {
+                  // In production, use Updates.reloadAsync()
+                  await Updates.reloadAsync();
+                }
+              } catch (error) {
+                console.error("Error during logout:", error);
+                // Fallback to router navigation
+                router.replace("/(auth)");
+              }
+            }}
             className="bg-white/20 rounded-full p-3 relative"
           >
             <Ionicons name="notifications-outline" size={24} color="white" />

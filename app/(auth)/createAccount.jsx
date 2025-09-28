@@ -525,13 +525,11 @@ const CreateAccountPage = () => {
       {/* Header */}
       <View className="bg-white px-5 py-4" style={{ paddingTop: insets.top + 16 }}>
         <View className="flex-row items-center justify-between">
-          <Pressable onPress={() => router.back()}>
+          <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(auth)')}>
             <Ionicons name="arrow-back" size={24} color="#374151" />
           </Pressable>
           <Text className="text-xl font-semibold text-gray-900">Create Account</Text>
-          <Pressable onPress={clearSavedData}>
-            <Ionicons name="refresh" size={24} color="#6b7280" />
-          </Pressable>
+          <View className="w-6" />
         </View>
       </View>
 

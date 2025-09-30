@@ -1,11 +1,11 @@
-import { View, Text, Pressable, Alert, ActivityIndicator } from 'react-native';
-import React, { useState, useEffect } from 'react';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
 import RazorpayCheckout from 'react-native-razorpay';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const PaymentPage = () => {
   const insets = useSafeAreaInsets();
@@ -26,52 +26,62 @@ const PaymentPage = () => {
       console.error('Error loading user details:', error);
     }
   };
-
-  const handlePayment = async () => {
+  const handlePayment = () => {
     setIsLoading(true);
-    
-    try {
-      const options = {
-        description: 'Journey Routers - Account Setup',
-        image: 'https://i.imgur.com/3g7nmJC.png', // Your logo URL
-        currency: 'INR',
-        key: 'rzp_test_1DP5mmOlF5G5ag', // Replace with your Razorpay key
-        amount: '99900', // ₹999 in paise (999 * 100)
-        name: 'Journey Routers',
-        order_id: '', // Replace with order_id created from your server
-        prefill: {
-          email: userDetails?.email || '',
-          contact: userDetails?.phone || '',
-          name: `${userDetails?.firstName || ''} ${userDetails?.lastName || ''}`.trim(),
-        },
-        theme: { color: '#7c3aed' },
-      };
-
-      const data = await RazorpayCheckout.open(options);
-      
-      // Payment successful
-      console.log('Payment Success:', data);
-      await handlePaymentSuccess(data);
-      
-    } catch (error) {
-      console.log('Payment Error:', error);
-      
-      if (error.code === RazorpayCheckout.PAYMENT_CANCELLED) {
-        Alert.alert('Payment Cancelled', 'You cancelled the payment. Please try again to complete your setup.');
-      } else {
-        Alert.alert('Payment Failed', 'There was an error processing your payment. Please try again.');
-      }
-    } finally {
-      setIsLoading(false);
-    }
+  
+    const options = {
+      description: 'Journey Routers - Account Setup',
+      image: 'https://i.imgur.com/3g7nmJC.png', // Your logo
+      currency: 'INR',
+      key: 'rzp_test_RNiBf9dqVTjgJt', // Replace with your Razorpay key
+      amount: '100', // 999 * 100 paise
+      name: 'Journey Routers',
+      order_id: '', // Replace with order_id from your backend if required
+      prefill: {
+        email: userDetails?.email || '',
+        contact: userDetails?.phone || '',
+        name: `${userDetails?.firstName || ''} ${userDetails?.lastName || ''}`.trim(),
+      },
+      theme: { color: '#7c3aed' },
+    };
+  
+    // console.log("Opening RazorpayCheckout with options:", options);
+    // RazorpayCheckout.open(options).then((data) => {
+    //  console.log(data)
+    //   alert(`Success: ${data.razorpay_payment_id}`);
+    // }).catch((error) => {
+    //   // handle failure
+    //   alert(`Error: ${error.code} | ${error.description}`);
+    // });
+    RazorpayCheckout.open(options)
+      .then(async (data) => {
+        console.log('Payment Success:', data);
+        await handlePaymentSuccess(data);
+      })
+      .catch((error) => {
+        console.log('Payment Error:', error);
+  
+        if (error.code === RazorpayCheckout.PAYMENT_CANCELLED) {
+          Alert.alert(
+            'Payment Cancelled',
+            'You cancelled the payment. Please try again to complete your setup.'
+          );
+        } else {
+          Alert.alert(
+            'Payment Failed',
+            `Error: ${error.code} | ${error.description || 'There was a problem processing your payment.'}`
+          );
+        }
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
-
+  
   const handlePaymentSuccess = async (paymentData) => {
     try {
-      // Set account as created in AsyncStorage
       await AsyncStorage.setItem('createAccount', 'true');
       
-      // Save payment details
       await AsyncStorage.setItem('paymentDetails', JSON.stringify({
         paymentId: paymentData.razorpay_payment_id,
         orderId: paymentData.razorpay_order_id,

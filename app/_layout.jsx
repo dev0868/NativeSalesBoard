@@ -10,8 +10,8 @@ export default function RootLayout() {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const authStatus = await AsyncStorage.getItem("createAccount");
-        setIsAuthenticated(authStatus === "true"); // store "true" as string
+        const userProfile = await AsyncStorage.getItem("userProfile");
+        setIsAuthenticated(userProfile !== null && userProfile !== undefined);
       } catch (error) {
         console.error("Error checking auth status:", error);
         setIsAuthenticated(false);

@@ -1,4 +1,4 @@
-import { View, Text, TextInput, Pressable, ScrollView, Alert, Image, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, Pressable, ScrollView, Alert, Image, KeyboardAvoidingView, Platform, ToastAndroid } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -13,33 +13,65 @@ const CreateAccountPage = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({
-    // Step 1: Personal Info
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
+    Email: '',
+    Phone: '',
+    FullName: '',
+    Role: 'Salesperson',
     
-    // Step 2: Organization Info
-    companyName: '',
-    gstNumber: '',
-    invoiceNumber: '',
-    logo: null, // Will store base64 string
+    CompanyName: '',
+    CompanyAddress: '',
+    CompanyGSTNumber: '',
+    CompanyWebsite: '',
+    CompanyLogoUrl: null, 
+    InvoiceNumber: '',
     
-    // Step 3: Payment Info
-    bankName: '',
-    branchName: '',
-    accountNumber: '',
-    ifscCode: '',
-    upiId: '',
-    qrCode: null // Will store base64 string
+    BankName: '',
+    BranchName: '',
+    AccountNumber: '',
+    IfscCode: '',
+    UpiId: '',
+    QrCode: null, 
+    
+    CompanyId: '',
+    Balance: 0,
+    Currency: 'INR',
+    SubscriptionPlanId: '',
+    SubscriptionType: '',
+    SubscriptionStatus: 'InActive',
+    Features_MaxQuotesPerMonth: 0,
+    Features_QuoteCharge: 0,
+    Features_PaymentProofUpload: false,
+    Features_InAppNotifications: false,
+    Features_WebNotifications: false,
+    Features_AnalyticsDashboard: false,
+    LoginDevices: {
+      Web: {
+        LoggedIn: false,
+        LastLogin: null,
+        DeviceInfo: null
+      },
+      Mobile: {
+        LoggedIn: false,
+        LastLogin: null,
+        DeviceInfo: null
+      }
+    },
+    Preferences: {
+      Notifications: {
+        InApp: true,
+        Email: true,
+        SMS: false,
+        WebPush: true
+      },
+      Theme: 'light',
+      Language: 'en'
+    }
   });
 
-  // Load saved form data and step on component mount
   useEffect(() => {
     loadSavedData();
   }, []);
 
-  // Save form data whenever it changes
   useEffect(() => {
     if (!isLoading) {
       saveFormData();
@@ -75,14 +107,7 @@ const CreateAccountPage = () => {
     }
   };
 
-  const clearSavedData = async () => {
-    try {
-      await AsyncStorage.removeItem('createAccountFormData');
-      await AsyncStorage.removeItem('createAccountCurrentStep');
-    } catch (error) {
-      console.error('Error clearing saved data:', error);
-    }
-  };
+
 
   const updateFormData = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -98,7 +123,6 @@ const CreateAccountPage = () => {
     return true;
   };
 
-  // Convert image to base64
   const convertToBase64 = async (uri) => {
     try {
       const base64 = await FileSystem.readAsStringAsync(uri, {
@@ -111,7 +135,6 @@ const CreateAccountPage = () => {
     }
   };
 
-  // Handle logo upload
   const handleLogoUpload = async () => {
     const hasPermission = await requestPermissions();
     if (!hasPermission) return;
@@ -128,7 +151,6 @@ const CreateAccountPage = () => {
       if (!result.canceled && result.assets[0]) {
         const asset = result.assets[0];
         
-        // Check file size (5MB limit) using legacy API
         const fileInfo = await FileSystem.getInfoAsync(asset.uri);
         if (fileInfo.size > 5 * 1024 * 1024) {
           Alert.alert('File Too Large', 'Please select an image smaller than 5MB.');
@@ -136,7 +158,7 @@ const CreateAccountPage = () => {
         }
 
         const base64 = await convertToBase64(asset.uri);
-        updateFormData('logo', `data:image/jpeg;base64,${base64}`);
+        updateFormData('CompanyLogoUrl', `data:image/jpeg;base64,${base64}`);
         Alert.alert('Success', 'Logo uploaded successfully!');
       }
     } catch (error) {
@@ -146,7 +168,6 @@ const CreateAccountPage = () => {
   };
   
 
-  // Handle QR code upload
   const handleQRUpload = async () => {
     const hasPermission = await requestPermissions();
     if (!hasPermission) return;
@@ -171,7 +192,7 @@ const CreateAccountPage = () => {
         }
 
         const base64 = await convertToBase64(asset.uri);
-        updateFormData('qrCode', `data:image/jpeg;base64,${base64}`);
+        updateFormData('QrCode', `data:image/jpeg;base64,${base64}`);
         Alert.alert('Success', 'QR code uploaded successfully!');
       }
     } catch (error) {
@@ -183,11 +204,11 @@ const CreateAccountPage = () => {
   const validateStep = (step) => {
     switch (step) {
       case 1:
-        return formData.firstName && formData.lastName && formData.email && formData.phone;
+        return formData.FullName && formData.Email && formData.Phone && formData.Role;
       case 2:
-        return formData.companyName;
+        return formData.CompanyName && formData.CompanyAddress;
       case 3:
-        return formData.bankName && formData.accountNumber;
+        return formData.BankName && formData.AccountNumber;
       default:
         return false;
     }
@@ -210,15 +231,83 @@ const CreateAccountPage = () => {
     }
   };
 
+  const fillEmptyFields = (data) => {
+    const currentDate = new Date().toISOString();
+    
+    const companyNamePart = data.CompanyName?.replace(/\s+/g, '').substring(0, 6).toUpperCase() || 'COMP';
+    const usernamePart = data.Email?.split('@')[0]?.substring(0, 4).toUpperCase() || 'USER';
+    const mobileLast4 = data.Phone?.slice(-4) || '0000';
+    const companyId = `${companyNamePart}${usernamePart}${mobileLast4}`;
+    
+    const deviceInfo = {
+      platform: Platform.OS,
+      version: Platform.Version,
+    };
+    
+    return {
+      ...data,
+      CompanyId: data.CompanyId || companyId,
+      CompanyAddress: data.CompanyAddress,
+      CompanyWebsite: data.CompanyWebsite,
+      CompanyGSTNumber: data.CompanyGSTNumber,
+      CompanyLogoUrl: data.CompanyLogoUrl,
+      SubscriptionStart: "",
+      SubscriptionEnd: "",
+      BankName: data.BankName || 'Default Bank',
+      BranchName: data.BranchName,
+      AccountNumber: data.AccountNumber,
+      IfscCode: data.IfscCode,
+      UpiId: data.UpiId,
+      LoginDevices: {
+        ...data.LoginDevices,
+        Mobile: {
+          LoggedIn: true,
+          LastLogin: currentDate,
+          DeviceInfo: deviceInfo
+        }
+      }
+    };
+  };
+
+  const showToast = (message) => {
+    if (Platform.OS === 'android') {
+      ToastAndroid.show(message, ToastAndroid.SHORT);
+    } else {
+      Alert.alert('Success', message);
+    }
+  };
+
   const handleSubmit = async () => {
     try {
-      // Save the final form data
-      await AsyncStorage.setItem('createAccountFormData', JSON.stringify(formData));
+      const completeFormData = fillEmptyFields(formData);
       
-      // Navigate to payment page
-      router.push('/(auth)/PaymentGateway/payment');
+      const response = await fetch('https://sg76vqy4vi.execute-api.ap-south-1.amazonaws.com/salesapp/Auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(completeFormData),
+      });
+
+      const result = await response.json();
+      
+      if (response.ok) {
+        // Save account data locally for payment gateway
+        
+        await AsyncStorage.setItem('userProfile', JSON.stringify(completeFormData));
+
+        await AsyncStorage.setItem('createAccountFormData', JSON.stringify(completeFormData));
+        await AsyncStorage.setItem('accountCreated', 'true');
+        
+        showToast('Account created successfully!');
+        
+        router.push('/(auth)/PaymentGateway/payment');
+      } else {
+        Alert.alert('Error', result.message || 'Failed to create account. Please try again.');
+        console.error('API Error:', result);
+      }
     } catch (error) {
-      Alert.alert('Error', 'Failed to proceed to payment. Please try again.');
+      Alert.alert('Error', 'Network error. Please check your connection and try again.');
       console.error('Submit error:', error);
     }
   };
@@ -260,21 +349,11 @@ const CreateAccountPage = () => {
 
         <View className="space-y-4">
           <View>
-            <Text className="text-gray-700 font-medium mb-2">First Name *</Text>
+            <Text className="text-gray-700 font-medium mb-2">Full Name *</Text>
             <TextInput
-              value={formData.firstName}
-              onChangeText={(value) => updateFormData('firstName', value)}
-              placeholder="Enter your first name"
-              className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900"
-            />
-          </View>
-
-          <View>
-            <Text className="text-gray-700 font-medium mb-2">Last Name *</Text>
-            <TextInput
-              value={formData.lastName}
-              onChangeText={(value) => updateFormData('lastName', value)}
-              placeholder="Enter your last name"
+              value={formData.FullName}
+              onChangeText={(value) => updateFormData('FullName', value)}
+              placeholder="Enter your full name"
               className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900"
             />
           </View>
@@ -282,8 +361,8 @@ const CreateAccountPage = () => {
           <View>
             <Text className="text-gray-700 font-medium mb-2">Email Address *</Text>
             <TextInput
-              value={formData.email}
-              onChangeText={(value) => updateFormData('email', value)}
+              value={formData.Email}
+              onChangeText={(value) => updateFormData('Email', value)}
               placeholder="Enter your email"
               keyboardType="email-address"
               autoCapitalize="none"
@@ -294,13 +373,14 @@ const CreateAccountPage = () => {
           <View>
             <Text className="text-gray-700 font-medium mb-2">Phone Number *</Text>
             <TextInput
-              value={formData.phone}
-              onChangeText={(value) => updateFormData('phone', value)}
+              value={formData.Phone}
+              onChangeText={(value) => updateFormData('Phone', value)}
               placeholder="Enter your phone number"
               keyboardType="phone-pad"
               className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900"
             />
           </View>
+
         </View>
       </View>
     </View>
@@ -321,9 +401,34 @@ const CreateAccountPage = () => {
           <View>
             <Text className="text-gray-700 font-medium mb-2">Company Name *</Text>
             <TextInput
-              value={formData.companyName}
-              onChangeText={(value) => updateFormData('companyName', value)}
+              value={formData.CompanyName}
+              onChangeText={(value) => updateFormData('CompanyName', value)}
               placeholder="Enter company name"
+              className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900"
+            />
+          </View>
+
+          <View>
+            <Text className="text-gray-700 font-medium mb-2">Company Address *</Text>
+            <TextInput
+              value={formData.CompanyAddress}
+              onChangeText={(value) => updateFormData('CompanyAddress', value)}
+              placeholder="Enter company address"
+              multiline={true}
+              numberOfLines={3}
+              className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900"
+              textAlignVertical="top"
+            />
+          </View>
+
+          <View>
+            <Text className="text-gray-700 font-medium mb-2">Company Website</Text>
+            <TextInput
+              value={formData.CompanyWebsite}
+              onChangeText={(value) => updateFormData('CompanyWebsite', value)}
+              placeholder="https://www.example.com"
+              keyboardType="url"
+              autoCapitalize="none"
               className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900"
             />
           </View>
@@ -334,10 +439,10 @@ const CreateAccountPage = () => {
               onPress={handleLogoUpload}
               className="bg-gray-50 rounded-xl px-4 py-6 border-2 border-dashed border-gray-300 items-center"
             >
-              {formData.logo ? (
+              {formData.CompanyLogoUrl ? (
                 <View className="items-center">
                   <Image 
-                    source={{ uri: formData.logo }} 
+                    source={{ uri: formData.CompanyLogoUrl }} 
                     className="w-16 h-16 rounded-lg mb-2"
                     resizeMode="cover"
                   />
@@ -357,8 +462,8 @@ const CreateAccountPage = () => {
           <View>
             <Text className="text-gray-700 font-medium mb-2">GST Number</Text>
             <TextInput
-              value={formData.gstNumber}
-              onChangeText={(value) => updateFormData('gstNumber', value)}
+              value={formData.CompanyGSTNumber}
+              onChangeText={(value) => updateFormData('CompanyGSTNumber', value)}
               placeholder="Enter GST number"
               autoCapitalize="characters"
               className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900"
@@ -368,8 +473,8 @@ const CreateAccountPage = () => {
           <View>
             <Text className="text-gray-700 font-medium mb-2">Invoice Number Format</Text>
             <TextInput
-              value={formData.invoiceNumber}
-              onChangeText={(value) => updateFormData('invoiceNumber', value)}
+              value={formData.InvoiceNumber}
+              onChangeText={(value) => updateFormData('InvoiceNumber', value)}
               placeholder="e.g., INV-2024-001"
               className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900"
             />
@@ -394,8 +499,8 @@ const CreateAccountPage = () => {
           <View>
             <Text className="text-gray-700 font-medium mb-2">Bank Name *</Text>
             <TextInput
-              value={formData.bankName}
-              onChangeText={(value) => updateFormData('bankName', value)}
+              value={formData.BankName}
+              onChangeText={(value) => updateFormData('BankName', value)}
               placeholder="Enter bank name"
               className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900"
             />
@@ -404,8 +509,8 @@ const CreateAccountPage = () => {
           <View>
             <Text className="text-gray-700 font-medium mb-2">Branch Name *</Text>
             <TextInput
-              value={formData.branchName}
-              onChangeText={(value) => updateFormData('branchName', value)}
+              value={formData.BranchName}
+              onChangeText={(value) => updateFormData('BranchName', value)}
               placeholder="Enter branch name"
               className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900"
             />
@@ -414,8 +519,8 @@ const CreateAccountPage = () => {
           <View>
             <Text className="text-gray-700 font-medium mb-2">Account Number *</Text>
             <TextInput
-              value={formData.accountNumber}
-              onChangeText={(value) => updateFormData('accountNumber', value)}
+              value={formData.AccountNumber}
+              onChangeText={(value) => updateFormData('AccountNumber', value)}
               placeholder="Enter account number"
               keyboardType="numeric"
               className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900"
@@ -425,8 +530,8 @@ const CreateAccountPage = () => {
           <View>
             <Text className="text-gray-700 font-medium mb-2">IFSC Code *</Text>
             <TextInput
-              value={formData.ifscCode}
-              onChangeText={(value) => updateFormData('ifscCode', value)}
+              value={formData.IfscCode}
+              onChangeText={(value) => updateFormData('IfscCode', value)}
               placeholder="Enter IFSC code"
               autoCapitalize="characters"
               className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900"
@@ -436,8 +541,8 @@ const CreateAccountPage = () => {
           <View>
             <Text className="text-gray-700 font-medium mb-2">UPI ID</Text>
             <TextInput
-              value={formData.upiId}
-              onChangeText={(value) => updateFormData('upiId', value)}
+              value={formData.UpiId}
+              onChangeText={(value) => updateFormData('UpiId', value)}
               placeholder="yourname@paytm"
               autoCapitalize="none"
               className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900"
@@ -450,10 +555,10 @@ const CreateAccountPage = () => {
               onPress={handleQRUpload}
               className="bg-gray-50 rounded-xl px-4 py-6 border-2 border-dashed border-gray-300 items-center"
             >
-              {formData.qrCode ? (
+              {formData.QrCode ? (
                 <View className="items-center">
                   <Image 
-                    source={{ uri: formData.qrCode }} 
+                    source={{ uri: formData.QrCode }} 
                     className="w-20 h-20 rounded-lg mb-2"
                     resizeMode="cover"
                   />
@@ -503,7 +608,6 @@ const CreateAccountPage = () => {
     </View>
   );
 
-  // Show loading state while data is being loaded
   if (isLoading) {
     return (
       <View className="flex-1 bg-gray-50 items-center justify-center">
@@ -530,10 +634,8 @@ const CreateAccountPage = () => {
         </View>
       </View>
 
-      {/* Progress Bar */}
       {renderProgressBar()}
 
-      {/* Content with KeyboardAvoidingView */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
@@ -545,7 +647,6 @@ const CreateAccountPage = () => {
           {currentStep === 3 && renderStep3()}
         </ScrollView>
 
-        {/* Navigation Buttons */}
         {renderButtons()}
       </KeyboardAvoidingView>
     </View>

@@ -28,31 +28,28 @@ const PaymentPage = () => {
   };
   const handlePayment = () => {
     setIsLoading(true);
+    
+    // Console log user details when reaching payment gateway
+    console.log('=== PAYMENT GATEWAY - USER DETAILS ===');
+    console.log(JSON.stringify(userDetails, null, 2));
+    console.log('=== END PAYMENT GATEWAY DATA ===');
   
     const options = {
       description: 'Journey Routers - Account Setup',
-      image: 'https://i.imgur.com/3g7nmJC.png', // Your logo
+      image: 'https://i.imgur.com/3g7nmJC.png', 
       currency: 'INR',
-      key: 'rzp_test_RNiBf9dqVTjgJt', // Replace with your Razorpay key
-      amount: '100', // 999 * 100 paise
+      key: 'rzp_test_RNiBf9dqVTjgJt', 
+      amount: '100', 
       name: 'Journey Routers',
-      order_id: '', // Replace with order_id from your backend if required
+      order_id: '', 
       prefill: {
-        email: userDetails?.email || '',
-        contact: userDetails?.phone || '',
-        name: `${userDetails?.firstName || ''} ${userDetails?.lastName || ''}`.trim(),
+        email: userDetails?.Email || '',
+        contact: userDetails?.Phone || '',
+        name: userDetails?.FullName || '',
       },
       theme: { color: '#7c3aed' },
     };
-  
-    // console.log("Opening RazorpayCheckout with options:", options);
-    // RazorpayCheckout.open(options).then((data) => {
-    //  console.log(data)
-    //   alert(`Success: ${data.razorpay_payment_id}`);
-    // }).catch((error) => {
-    //   // handle failure
-    //   alert(`Error: ${error.code} | ${error.description}`);
-    // });
+
     RazorpayCheckout.open(options)
       .then(async (data) => {
         console.log('Payment Success:', data);
@@ -64,24 +61,73 @@ const PaymentPage = () => {
         if (error.code === RazorpayCheckout.PAYMENT_CANCELLED) {
           Alert.alert(
             'Payment Cancelled',
-            'You cancelled the payment. Please try again to complete your setup.'
+            'You cancelled the payment. Your account data has not been updated. Please try again to complete your setup.'
           );
         } else {
           Alert.alert(
             'Payment Failed',
-            `Error: ${error.code} | ${error.description || 'There was a problem processing your payment.'}`
+            `Error: ${error.code} | ${error.description || 'There was a problem processing your payment. Your account data has not been updated.'}`
           );
         }
+        
+        // DO NOT update user data on payment failure or cancellation
+        // User data remains unchanged, they can retry payment later
       })
       .finally(() => {
         setIsLoading(false);
       });
   };
   
+  const updateAccountPaymentStatus = async (isPaid = false) => {
+    try {
+      const accountData = await AsyncStorage.getItem('createAccountFormData');
+      if (accountData) {
+        const parsedData = JSON.parse(accountData);
+        
+        console.log(`Updating account payment status: isPaid = ${isPaid}`);
+        
+        // Update account with payment status
+        const updatedData = {
+          ...parsedData,
+          SubscriptionStatus: isPaid ? 'active' : 'inactive',
+          SubscriptionPlanId: isPaid ? 'SUB#APP_WEB_001' : '',
+          SubscriptionType: isPaid ? 'App+Web' : '',
+          SubscriptionStart: isPaid ? new Date().toISOString() : '',
+          SubscriptionEnd: isPaid ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() : '',
+          Balance: isPaid ? 1000 : 0,
+          Features_MaxQuotesPerMonth: isPaid ? 200 : 0,
+          Features_QuoteCharge: isPaid ? 2 : 0,
+          Features_PaymentProofUpload: isPaid,
+          Features_InAppNotifications: isPaid,
+          Features_WebNotifications: isPaid,
+          Features_AnalyticsDashboard: isPaid,
+        };
+        
+        // Make API call to update account
+        const response = await fetch('https://sg76vqy4vi.execute-api.ap-south-1.amazonaws.com/salesapp/Auth', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updatedData),
+        });
+        
+        if (response.ok) {
+          console.log(`Account updated successfully with payment status: ${isPaid ? 'PAID' : 'UNPAID'}`);
+        } else {
+          console.error('Failed to update account via API');
+        }
+        
+        return updatedData;
+      }
+    } catch (error) {
+      console.error('Error updating account:', error);
+      throw error; // Re-throw to handle in calling function
+    }
+  };
+
   const handlePaymentSuccess = async (paymentData) => {
     try {
-      await AsyncStorage.setItem('createAccount', 'true');
-      
       await AsyncStorage.setItem('paymentDetails', JSON.stringify({
         paymentId: paymentData.razorpay_payment_id,
         orderId: paymentData.razorpay_order_id,
@@ -89,7 +135,15 @@ const PaymentPage = () => {
         timestamp: new Date().toISOString(),
       }));
 
-      // Clear form data as it's no longer needed
+      // Update account with paid status
+      const updatedProfile = await updateAccountPaymentStatus(true);
+      
+      // Update userProfile with paid status
+      if (updatedProfile) {
+        await AsyncStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+      }
+      
+      // Clear form data
       await AsyncStorage.removeItem('createAccountFormData');
       await AsyncStorage.removeItem('createAccountCurrentStep');
 
@@ -122,9 +176,18 @@ const PaymentPage = () => {
           text: 'Skip for Now',
           onPress: async () => {
             try {
-              await AsyncStorage.setItem('createAccount', 'true');
+              // Update account with unpaid status
+              const updatedProfile = await updateAccountPaymentStatus(false);
+              
+              // Update userProfile with unpaid status
+              if (updatedProfile) {
+                await AsyncStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+              }
+              
+              // Clear form data
               await AsyncStorage.removeItem('createAccountFormData');
               await AsyncStorage.removeItem('createAccountCurrentStep');
+              
               router.replace('/(tabs)');
             } catch (error) {
               console.error('Error skipping payment:', error);
@@ -203,10 +266,11 @@ const PaymentPage = () => {
           <View className="bg-white rounded-xl p-4 mb-6">
             <Text className="text-gray-700 font-medium mb-2">Account Details:</Text>
             <Text className="text-gray-600">
-              {userDetails.firstName} {userDetails.lastName}
+              {userDetails.FullName}
             </Text>
-            <Text className="text-gray-600">{userDetails.email}</Text>
-            <Text className="text-gray-600">{userDetails.phone}</Text>
+            <Text className="text-gray-600">{userDetails.Email}</Text>
+            <Text className="text-gray-600">{userDetails.Phone}</Text>
+            <Text className="text-gray-600">{userDetails.CompanyName}</Text>
           </View>
         )}
       </View>

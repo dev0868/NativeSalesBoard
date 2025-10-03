@@ -1,15 +1,19 @@
-import { View, Text, Pressable, ScrollView, Dimensions } from "react-native";
+import { View, Text, Pressable, ScrollView, Dimensions, TextInput, Alert, Modal, ActivityIndicator, Platform, ToastAndroid } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {  useSafeAreaInsets } from "react-native-safe-area-context";
 import { useState, useRef } from "react";
+import { Ionicons } from "@expo/vector-icons";
 
 const OnBoardingPage = () => {
   const insets = useSafeAreaInsets();
   const { width } = Dimensions.get('window');
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollViewRef = useRef(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginInput, setLoginInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   
   // Carousel data
   const carouselImages = [
@@ -26,11 +30,84 @@ const OnBoardingPage = () => {
     setCurrentIndex(index);
   };
 
+  const showToast = (message) => {
+    if (Platform.OS === 'android') {
+      ToastAndroid.show(message, ToastAndroid.SHORT);
+    } else {
+      Alert.alert('Info', message);
+    }
+  };
+
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const isValidPhone = (phone) => {
+    const phoneRegex = /^[+]?[0-9]{10,15}$/;
+    return phoneRegex.test(phone.replace(/\s+/g, ''));
+  };
+
+  const handleLogin = async () => {
+    if (!loginInput.trim()) {
+      Alert.alert('Error', 'Please enter your email or phone number');
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      let apiUrl = 'https://sg76vqy4vi.execute-api.ap-south-1.amazonaws.com/salesapp/Auth?';
+      
+      // Determine if input is email or phone
+      if (isValidEmail(loginInput)) {
+        apiUrl += `Email=${encodeURIComponent(loginInput)}`;
+      } else if (isValidPhone(loginInput)) {
+        apiUrl += `Phone=${encodeURIComponent(loginInput)}`;
+      } else {
+        Alert.alert('Error', 'Please enter a valid email or phone number');
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+      
+      if (response.ok) {
+        if (Array.isArray(result) && result.length === 0) {
+          // Empty array means no profile found
+          Alert.alert('Not Found', 'No account found with this email/phone. Please create an account first.');
+        } else if (result && (Array.isArray(result) ? result.length > 0 : Object.keys(result).length > 0)) {
+          // Profile found, store to localStorage and navigate
+          await AsyncStorage.setItem('userProfile', JSON.stringify(result));
+          await AsyncStorage.setItem('createAccount', 'true');
+          
+          showToast('Login successful!');
+          setShowLoginModal(false);
+          router.replace('/(tabs)');
+        } else {
+          Alert.alert('Error', 'Invalid response from server');
+        }
+      } else {
+        Alert.alert('Error', result.message || 'Login failed. Please try again.');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Network error. Please check your connection and try again.');
+      console.error('Login error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleGetStarted = async () => {
     try {
-      // Set createAccount to true in AsyncStorage
       await AsyncStorage.setItem("createAccount", "true");
-      // Navigate to tabs
       router.replace("/(tabs)");
     } catch (error) {
       console.error("Error setting auth status:", error);
@@ -48,9 +125,14 @@ const OnBoardingPage = () => {
       >
         <View className="flex-row items-center justify-between">
           <Text className="text-xl font-semibold text-white">Journey Routers</Text>
-          <Pressable onPress={()=>router.replace("/(auth)/createAccount")} className="px-4 py-2 rounded-full bg-white/20">
-            <Text className="text-white font-medium">Create Account</Text>
-          </Pressable>
+          <View className="flex-row gap-2">
+            <Pressable onPress={() => setShowLoginModal(true)} className="px-4 py-2 rounded-full bg-white/20">
+              <Text className="text-white font-medium">Login</Text>
+            </Pressable>
+            <Pressable onPress={()=>router.replace("/(auth)/createAccount")} className="px-4 py-2 rounded-full bg-white/20">
+              <Text className="text-white font-medium">Sign Up</Text>
+            </Pressable>
+          </View>
         </View>
       </LinearGradient>
 
@@ -103,6 +185,71 @@ const OnBoardingPage = () => {
           </Pressable>
         </View> */}
       </View>
+
+      {/* Login Modal */}
+      <Modal
+        visible={showLoginModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowLoginModal(false)}
+      >
+        <View className="flex-1 bg-black/50 justify-center px-6">
+          <View className="bg-white rounded-2xl p-6">
+            <View className="flex-row items-center justify-between mb-6">
+              <Text className="text-xl font-bold text-gray-900">Login</Text>
+              <Pressable onPress={() => setShowLoginModal(false)}>
+                <Ionicons name="close" size={24} color="#6b7280" />
+              </Pressable>
+            </View>
+
+            <View className="mb-4">
+              <Text className="text-gray-700 font-medium mb-2">Email or Phone Number</Text>
+              <TextInput
+                value={loginInput}
+                onChangeText={setLoginInput}
+                placeholder="Enter your email or phone number"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900 border border-gray-200"
+                editable={!isLoading}
+              />
+            </View>
+
+            <View className="space-y-3">
+              <Pressable 
+                onPress={handleLogin}
+                disabled={isLoading}
+                className="overflow-hidden rounded-full"
+              >
+                <LinearGradient 
+                  colors={["#7c3aed", "#5b21b6"]} 
+                  start={{ x: 0, y: 0 }} 
+                  end={{ x: 1, y: 1 }} 
+                  style={{ paddingVertical: 16, borderRadius: 9999 }}
+                >
+                  <View className="flex-row items-center justify-center">
+                    {isLoading && <ActivityIndicator size="small" color="white" className="mr-2" />}
+                    <Text className="text-center text-white font-semibold text-base">
+                      {isLoading ? 'Logging in...' : 'Login'}
+                    </Text>
+                  </View>
+                </LinearGradient>
+              </Pressable>
+
+              <Pressable 
+                onPress={() => {
+                  setShowLoginModal(false);
+                  router.push('/(auth)/createAccount');
+                }}
+                className="bg-gray-200 rounded-full py-4"
+                disabled={isLoading}
+              >
+                <Text className="text-center text-gray-700 font-semibold">Create New Account</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };

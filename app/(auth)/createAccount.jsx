@@ -295,8 +295,7 @@ const CreateAccountPage = () => {
         // Save account data locally for payment gateway
         
         await AsyncStorage.setItem('userProfile', JSON.stringify(completeFormData));
-
-        await AsyncStorage.setItem('createAccountFormData', JSON.stringify(completeFormData));
+        await AsyncStorage.removeItem('createAccountFormData');
         await AsyncStorage.setItem('accountCreated', 'true');
         
         showToast('Account created successfully!');

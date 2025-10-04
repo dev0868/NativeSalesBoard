@@ -1,90 +1,256 @@
-import React from "react";
-import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Alert } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { Picker } from "@react-native-picker/picker";
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
 import Navbar from "@/components/Navbar";
+import DatePicker from "@/components/ui/DatePicker";
+import MultiSelectDestinations from "@/components/ui/MultiSelectDestinations";
+import ToggleSwitch from "@/components/ui/ToggleSwitch";
+import { getSalesPersonInfo } from "@/utils/userProfile";
 
 const DestinationList = [
-  { DestinationName: "Bali" },
-  { DestinationName: "Maldives" },
-  { DestinationName: "Dubai" },
-  { DestinationName: "Thailand" },
-  { DestinationName: "Singapore" },
-  { DestinationName: "Japan" },
-  { DestinationName: "Europe" },
-  { DestinationName: "Switzerland" },
-  { DestinationName: "Paris" },
-  { DestinationName: "London" },
+  "Bali",
+  "Maldives", 
+  "Dubai",
+  "Thailand",
+  "Singapore",
+  "Japan",
+  "Europe",
+  "Switzerland",
+  "Paris",
+  "London",
+  "Vietnam",
+  "Malaysia",
+  "Indonesia",
+  "Philippines",
+  "South Korea",
+  "Nepal",
+  "Bhutan",
+  "Sri Lanka"
 ];
+
+const DepartureCities = [
+  "Mumbai",
+  "Delhi",
+  "Bangalore",
+  "Chennai",
+  "Kolkata",
+  "Hyderabad",
+  "Pune",
+  "Ahmedabad",
+  "Kochi",
+  "Goa"
+];
+
+const LeadSources = [
+  "WebApp",
+  "Instagram", 
+  "Facebook",
+  "WhatsApp",
+  "Direct",
+  "Referral",
+  "Google Ads",
+  "Walk-in"
+];
+
+const LeadPotentials = ["High", "Medium", "Low"];
+const LeadRatings = ["Hot", "Warm", "Cold"];
 
 export default function AddScreen() {
   const {
     control,
     handleSubmit,
     formState: { errors },
+    setValue,
+    reset,
   } = useForm();
 
-  const onSubmit = (data: any) => {
-    console.log("Form Submitted:", data);
-    Alert.alert(
-      'Success',
-      'Lead created successfully!',
-      [{ text: 'OK' }]
-    );
+  // State for multi-select destinations
+  const [selectedDestinations, setSelectedDestinations] = useState<string[]>([]);
+  const [isMultiDestination, setIsMultiDestination] = useState(false);
+  
+  // Loading state for API call
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const onSubmit = async (data: any) => {
+    setIsSubmitting(true);
+    
+    try {
+      // Calculate end date
+      const calculateEndDate = (startDate: string, days: number) => {
+        const start = new Date(startDate);
+        const end = new Date(start);
+        end.setDate(start.getDate() + days - 1);
+        return end.toISOString().split('T')[0];
+      };
+
+      // Get sales person info from AsyncStorage
+      const salesPersonInfo = await getSalesPersonInfo();
+      console.log(salesPersonInfo);
+
+      // Create the lead object matching your JSON structure
+      const leadData = {
+        CompanyId: salesPersonInfo.companyId,
+        CompanyName: salesPersonInfo.companyName,
+
+        "Client-Name": data["Client-Name"],
+        "Client-Email": data["Client-Email"],
+        "Client-Contact": data["Client-Contact"],
+        "Client-DepartureCity": data["Client-DepartureCity"],
+        "Client-Destination": isMultiDestination 
+          ? (selectedDestinations.length > 0 ? selectedDestinations[0] : data["Client-Destination"])
+          : data["Client-Destination"],
+        "Client-Destinations": isMultiDestination ? selectedDestinations : [data["Client-Destination"]],
+        "IsMultiDestination": isMultiDestination,
+        "Client-Pax": parseInt(data["Client-Pax"]) || 0,
+        "Client-Child": parseInt(data["Client-Child"]) || 0,
+        "Client-Infant": parseInt(data["Client-Infant"]) || 0,
+        "Client-Days": parseInt(data["Client-Days"]) || 0,
+        "Client-TravelDate": data["Client-TravelDate"]?.date || data["Client-TravelDate"],
+        "Client-TravelEndDate": data["Client-TravelDate"]?.date 
+          ? calculateEndDate(data["Client-TravelDate"].date, parseInt(data["Client-Days"]) || 0)
+          : calculateEndDate(data["Client-TravelDate"], parseInt(data["Client-Days"]) || 0),
+
+        LeadSource: data.LeadSource || "WebApp",
+        LeadPotential: data.LeadPotential || "Medium",
+        LeadRating: data.LeadRating || "Warm",
+
+        SalesStatus: "LeadCreate",
+        LatestStatus: "LeadCreate",
+        SalesPersonUid: salesPersonInfo.FullName,
+        SalesPersonName: salesPersonInfo.FullName,
+        SalesPersonEmail: salesPersonInfo.Email,
+
+        Quotations: [],
+
+        Comments: [
+          {
+            By: salesPersonInfo.salesPersonEmail,
+            Role: "Sales",
+            Message: data.Comments || "Initial lead created",
+            At: new Date().toISOString()
+          }
+        ]
+      };
+
+      console.log("Lead Data:", JSON.stringify(leadData, null, 2));
+
+      // Make API call
+      const response = await fetch('https://0rq0f90i05.execute-api.ap-south-1.amazonaws.com/salesapp/lead-managment/create-quote', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(leadData),
+      });
+
+      const responseData = await response.json();
+
+      if (response.ok) {
+        // Success - Show success alert and reset form
+        Alert.alert(
+          "Success", 
+          "Lead created successfully!", 
+          [
+            { 
+              text: "OK", 
+              onPress: () => {
+                // Reset form fields
+                reset();
+                // Reset custom states
+                setSelectedDestinations([]);
+                setIsMultiDestination(false);
+              }
+            }
+          ]
+        );
+      } else {
+        // API returned error
+        Alert.alert(
+          "Error", 
+          responseData.message || "Failed to create lead. Please try again.", 
+          [{ text: "OK" }]
+        );
+      }
+
+    } catch (error) {
+      // Network or other error
+      console.error("Error creating lead:", error);
+      Alert.alert(
+        "Error", 
+        "Network error. Please check your connection and try again.", 
+        [{ text: "OK" }]
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const FormField = ({ 
-    label, 
-    children, 
-    required = false, 
-    error 
-  }: { 
-    label: string; 
-    children: React.ReactNode; 
-    required?: boolean; 
+  const FormField = ({
+    label,
+    children,
+    required = false,
+    error,
+  }: {
+    label: string;
+    children: React.ReactNode;
+    required?: boolean;
     error?: any;
   }) => (
-    <View className="mb-6">
-      <Text className="text-gray-700 font-semibold mb-2 text-base">
-        {label} {required && <Text className="text-red-500">*</Text>}
+    <View style={{ marginBottom: 24 }}>
+      <Text style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}>
+        {label} {required && <Text style={{ color: "red" }}>*</Text>}
       </Text>
       {children}
-      {error && <Text className="text-red-500 text-sm mt-1">{error.message}</Text>}
+      {error && (
+        <Text style={{ color: "red", fontSize: 12, marginTop: 4 }}>
+          {error.message}
+        </Text>
+      )}
     </View>
   );
 
   return (
     <View style={styles.mainContainer}>
-      <Navbar 
+      <Navbar
         title="Add New Lead"
         subtitle="Create a new customer lead"
         showSearch={false}
         showNotifications={false}
       />
-      <ScrollView 
+
+      <ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
         {/* Personal Information Section */}
-        <View className="bg-white rounded-2xl p-6 mb-6 shadow-sm">
-          <View className="flex-row items-center mb-4">
-            <View className="bg-purple-100 rounded-full p-2 mr-3">
+        <View style={styles.card}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.iconWrapper}>
               <Ionicons name="person" size={20} color="#7c3aed" />
             </View>
-            <Text className="text-xl font-bold text-gray-900">Personal Information</Text>
+            <Text style={styles.sectionTitle}>Personal Information</Text>
           </View>
-          
-          <FormField label="Full Name" required error={errors.FullName}>
+
+          <FormField label="Client Name" required error={errors["Client-Name"]}>
             <Controller
               control={control}
-              name="FullName"
-              rules={{ required: "Name is required" }}
+              name="Client-Name"
+              rules={{ required: "Client name is required" }}
               render={({ field: { onChange, value } }) => (
                 <TextInput
-                  style={[styles.input, errors.FullName && styles.errorInput]}
-                  placeholder="Enter full name"
+                  style={[styles.input, errors["Client-Name"] && styles.errorInput]}
+                  placeholder="Enter client full name"
                   value={value}
                   onChangeText={onChange}
                   placeholderTextColor="#9ca3af"
@@ -93,21 +259,26 @@ export default function AddScreen() {
             />
           </FormField>
 
-          <FormField label="Contact Number" required error={errors.Contact}>
+          <FormField label="Contact Number" required error={errors["Client-Contact"]}>
             <Controller
               control={control}
-              name="Contact"
+              name="Client-Contact"
               rules={{
                 required: "Contact is required",
                 minLength: { value: 10, message: "Enter 10 digits" },
               }}
               render={({ field: { onChange, value } }) => (
-                <View className="flex-row items-center">
-                  <View className="bg-gray-100 rounded-l-lg px-3 py-4 border-r border-gray-200">
-                    <Text className="text-gray-600 font-medium">+91</Text>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <View style={styles.prefix}>
+                    <Text style={{ color: "#4b5563", fontWeight: "500" }}>
+                      +91
+                    </Text>
                   </View>
                   <TextInput
-                    style={[styles.inputWithPrefix, errors.Contact && styles.errorInput]}
+                    style={[
+                      styles.inputWithPrefix,
+                      errors["Client-Contact"] && styles.errorInput,
+                    ]}
                     placeholder="Enter 10-digit number"
                     keyboardType="phone-pad"
                     maxLength={10}
@@ -120,20 +291,20 @@ export default function AddScreen() {
             />
           </FormField>
 
-          <FormField label="Email Address" required error={errors.Email}>
+          <FormField label="Email Address" required error={errors["Client-Email"]}>
             <Controller
               control={control}
-              name="Email"
-              rules={{ 
+              name="Client-Email"
+              rules={{
                 required: "Email is required",
                 pattern: {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: "Enter a valid email address"
-                }
+                  message: "Enter a valid email address",
+                },
               }}
               render={({ field: { onChange, value } }) => (
                 <TextInput
-                  style={[styles.input, errors.Email && styles.errorInput]}
+                  style={[styles.input, errors["Client-Email"] && styles.errorInput]}
                   placeholder="Enter email address"
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -147,48 +318,22 @@ export default function AddScreen() {
         </View>
 
         {/* Travel Information Section */}
-        <View className="bg-white rounded-2xl p-6 mb-6 shadow-sm">
-          <View className="flex-row items-center mb-4">
-            <View className="bg-blue-100 rounded-full p-2 mr-3">
+        <View style={styles.card}>
+          <View style={styles.sectionHeader}>
+            <View style={[styles.iconWrapper, { backgroundColor: "#dbeafe" }]}>
               <Ionicons name="airplane" size={20} color="#3b82f6" />
             </View>
-            <Text className="text-xl font-bold text-gray-900">Travel Information</Text>
+            <Text style={styles.sectionTitle}>Travel Information</Text>
           </View>
-          
-          <FormField label="Destination" required error={errors.DestinationName}>
-            <Controller
-              control={control}
-              name="DestinationName"
-              rules={{ required: "Destination is required" }}
-              render={({ field: { onChange, value } }) => (
-                <View style={styles.pickerContainer}>
-                  <Picker
-                    selectedValue={value}
-                    style={styles.picker}
-                    onValueChange={onChange}
-                  >
-                    <Picker.Item label="Select destination" value="" />
-                    {DestinationList.map((ele, idx) => (
-                      <Picker.Item
-                        label={ele.DestinationName}
-                        value={ele.DestinationName}
-                        key={idx}
-                      />
-                    ))}
-                  </Picker>
-                </View>
-              )}
-            />
-          </FormField>
 
-          <FormField label="Departure City" error={errors.DepartureCity}>
+          <FormField label="Departure City" >
             <Controller
               control={control}
-              name="DepartureCity"
+ name="Client-DepartureCity"
               render={({ field: { onChange, value } }) => (
                 <TextInput
-                  style={styles.input}
-                  placeholder="Enter departure city"
+                style={styles.input}
+                  placeholder="Enter Departure"
                   value={value}
                   onChangeText={onChange}
                   placeholderTextColor="#9ca3af"
@@ -196,13 +341,92 @@ export default function AddScreen() {
               )}
             />
           </FormField>
-          
-          <View className="flex-row space-x-3">
-            <View className="flex-1">
-              <FormField label="Duration (Days)" error={errors.Days}>
+      
+
+          {/* Multi-destination toggle */}
+          {/* <ToggleSwitch
+            label="Multiple Destinations"
+            value={isMultiDestination}
+            onValueChange={(value) => {
+              setIsMultiDestination(value);
+              if (value) {
+                // Reset single destination when switching to multi
+                setValue("Client-Destination", "");
+              } else {
+                // Reset multi destinations when switching to single
+                setSelectedDestinations([]);
+              }
+            }}
+          /> */}
+     <FormField label="Destination" required error={errors["Client-Destination"]}>
+              <Controller
+                control={control}
+                name="Client-Destination"
+                rules={{ required: "Destination is required" }}
+                render={({ field: { onChange, value } }) => (
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={value}
+                      style={styles.picker}
+                      onValueChange={onChange}
+                    >
+                      <Picker.Item label="Select destination" value="" />
+                      {DestinationList.map((destination, idx) => (
+                        <Picker.Item
+                          label={destination}
+                          value={destination}
+                          key={idx}
+                        />
+                      ))}
+                    </Picker>
+                  </View>
+                )}
+              />
+            </FormField>
+          {/* {!isMultiDestination ? (
+            <FormField label="Destination" required error={errors["Client-Destination"]}>
+              <Controller
+                control={control}
+                name="Client-Destination"
+                rules={{ required: "Destination is required" }}
+                render={({ field: { onChange, value } }) => (
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={value}
+                      style={styles.picker}
+                      onValueChange={onChange}
+                    >
+                      <Picker.Item label="Select destination" value="" />
+                      {DestinationList.map((destination, idx) => (
+                        <Picker.Item
+                          label={destination}
+                          value={destination}
+                          key={idx}
+                        />
+                      ))}
+                    </Picker>
+                  </View>
+                )}
+              />
+            </FormField>
+          ) : (
+            <FormField label="Destinations" required error={selectedDestinations.length === 0 ? { message: "At least one destination is required" } : undefined}>
+              <MultiSelectDestinations
+                destinations={DestinationList}
+                selectedDestinations={selectedDestinations}
+                onSelectionChange={setSelectedDestinations}
+                placeholder="Select multiple destinations"
+              />
+            </FormField>
+          )} */}
+
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            <View style={{ flex: 1 }}>
+              <FormField label="Duration (Days)" required error={errors["Client-Days"]}>
                 <Controller
                   control={control}
-                  name="Days"
+                  name="Client-Days"
+                  rules={{ required: "Duration is required" }}
                   render={({ field: { onChange, value } }) => (
                     <TextInput
                       style={styles.input}
@@ -216,16 +440,77 @@ export default function AddScreen() {
                 />
               </FormField>
             </View>
-            
-            <View className="flex-1">
-              <FormField label="Travel Date" error={errors.TravelDate}>
+
+            <View style={{ flex: 1 }}>
+              <FormField label="Travel Date" required error={errors["Client-TravelDate"]}>
                 <Controller
                   control={control}
-                  name="TravelDate"
+                  name="Client-TravelDate"
+                  rules={{ required: "Travel Date is required" }}
+                  render={({ field: { onChange, value } }) => (
+                    <DatePicker
+                      value={value}
+                      onDateChange={onChange}
+                      placeholder="Select travel date"
+                    />
+                  )}
+                />
+              </FormField>
+            </View>
+          </View>
+
+          {/* Passenger Information */}
+          <Text style={styles.sectionSubtitle}>Passenger Information</Text>
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            <View style={{ flex: 1 }}>
+              <FormField label="Adults" required error={errors["Client-Pax"]}>
+                <Controller
+                  control={control}
+                  name="Client-Pax"
+                  rules={{ required: "Number of adults is required" }}
                   render={({ field: { onChange, value } }) => (
                     <TextInput
                       style={styles.input}
-                      placeholder="DD/MM/YYYY"
+                      placeholder="Adults"
+                      keyboardType="numeric"
+                      value={value}
+                      onChangeText={onChange}
+                      placeholderTextColor="#9ca3af"
+                    />
+                  )}
+                />
+              </FormField>
+            </View>
+
+            <View style={{ flex: 1 }}>
+              <FormField label="Children" error={errors["Client-Child"]}>
+                <Controller
+                  control={control}
+                  name="Client-Child"
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Children"
+                      keyboardType="numeric"
+                      value={value}
+                      onChangeText={onChange}
+                      placeholderTextColor="#9ca3af"
+                    />
+                  )}
+                />
+              </FormField>
+            </View>
+
+            <View style={{ flex: 1 }}>
+              <FormField label="Infants" error={errors["Client-Infant"]}>
+                <Controller
+                  control={control}
+                  name="Client-Infant"
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Infants"
+                      keyboardType="numeric"
                       value={value}
                       onChangeText={onChange}
                       placeholderTextColor="#9ca3af"
@@ -238,113 +523,62 @@ export default function AddScreen() {
         </View>
 
         {/* Additional Details Section */}
-        <View className="bg-white rounded-2xl p-6 mb-6 shadow-sm">
-          <View className="flex-row items-center mb-4">
-            <View className="bg-green-100 rounded-full p-2 mr-3">
-              <Ionicons name="information-circle" size={20} color="#10b981" />
+        <View style={styles.card}>
+          <View style={styles.sectionHeader}>
+            <View style={[styles.iconWrapper, { backgroundColor: "#dcfce7" }]}>
+              <Ionicons name="information-circle" size={20} color="#16a34a" />
             </View>
-            <Text className="text-xl font-bold text-gray-900">Additional Details</Text>
+            <Text style={styles.sectionTitle}>Additional Details</Text>
           </View>
-          
-          <FormField label="Lead Source" required error={errors.LeadSource}>
+
+  
+          <FormField label="Additional Comments" error={errors.Comments}>
             <Controller
               control={control}
-              name="LeadSource"
-              rules={{ required: "Lead Source is required" }}
+              name="Comments"
               render={({ field: { onChange, value } }) => (
-                <View style={styles.pickerContainer}>
-                  <Picker
-                    selectedValue={value}
-                    style={styles.picker}
-                    onValueChange={onChange}
-                  >
-                    <Picker.Item label="Select lead source" value="" />
-                    <Picker.Item label="Direct" value="Direct" />
-                    <Picker.Item label="Agency" value="Agency" />
-                    <Picker.Item label="Instagram" value="Instagram" />
-                    <Picker.Item label="WhatsApp" value="WhatsApp" />
-                    <Picker.Item label="Facebook" value="Facebook" />
-                    <Picker.Item label="Referral" value="Referral" />
-                  </Picker>
-                </View>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder="Enter any additional details, special requirements, or comments..."
+                  value={value}
+                  onChangeText={onChange}
+                  placeholderTextColor="#9ca3af"
+                  multiline={true}
+                  numberOfLines={4}
+                  textAlignVertical="top"
+                />
               )}
             />
           </FormField>
-          
-          <View className="flex-row space-x-3">
-            <View className="flex-1">
-              <FormField label="Adults" error={errors.NoOfPax}>
-                <Controller
-                  control={control}
-                  name="NoOfPax"
-                  render={({ field: { onChange, value } }) => (
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Number of adults"
-                      keyboardType="numeric"
-                      value={value}
-                      onChangeText={onChange}
-                      placeholderTextColor="#9ca3af"
-                    />
-                  )}
-                />
-              </FormField>
-            </View>
-            
-            <View className="flex-1">
-              <FormField label="Children" error={errors.Child}>
-                <Controller
-                  control={control}
-                  name="Child"
-                  render={({ field: { onChange, value } }) => (
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Number of children"
-                      keyboardType="numeric"
-                      value={value}
-                      onChangeText={onChange}
-                      placeholderTextColor="#9ca3af"
-                    />
-                  )}
-                />
-              </FormField>
-            </View>
-          </View>
-          
-          <FormField label="Budget" error={errors.Budget}>
-            <Controller
-              control={control}
-              name="Budget"
-              render={({ field: { onChange, value } }) => (
-                <View className="flex-row items-center">
-                  <View className="bg-gray-100 rounded-l-lg px-3 py-4 border-r border-gray-200">
-                    <Text className="text-gray-600 font-medium">₹</Text>
-                  </View>
-                  <TextInput
-                    style={[styles.inputWithPrefix, errors.Budget && styles.errorInput]}
-                    placeholder="Enter budget amount"
-                    keyboardType="numeric"
-                    value={value}
-                    onChangeText={onChange}
-                    placeholderTextColor="#9ca3af"
-                  />
-                </View>
-              )}
-            />
-          </FormField>
+
+      
         </View>
 
         {/* Submit Button */}
         <TouchableOpacity
           onPress={handleSubmit(onSubmit)}
-          className="bg-purple-600 rounded-2xl py-4 px-6 shadow-lg"
+          style={[
+            styles.submitBtn,
+            isSubmitting && styles.submitBtnDisabled
+          ]}
+          disabled={isSubmitting}
         >
-          <View className="flex-row items-center justify-center">
-            <Ionicons name="add-circle" size={24} color="white" />
-            <Text className="text-white font-bold text-lg ml-2">Create Lead</Text>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            {isSubmitting ? (
+              <>
+                <View style={styles.loadingSpinner} />
+                <Text style={styles.submitBtnText}>Creating Lead...</Text>
+              </>
+            ) : (
+              <>
+                <Ionicons name="add-circle" size={24} color="white" />
+                <Text style={styles.submitBtnText}>Create Lead</Text>
+              </>
+            )}
           </View>
         </TouchableOpacity>
       </ScrollView>
+
     </View>
   );
 }
@@ -352,7 +586,7 @@ export default function AddScreen() {
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: "#f3f4f6",
   },
   scrollContainer: {
     flex: 1,
@@ -361,62 +595,116 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 100,
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
+  card: {
+    backgroundColor: "white",
+    borderRadius: 16,
     padding: 16,
-    borderRadius: 12,
-    backgroundColor: 'white',
-    fontSize: 16,
-    color: '#1f2937',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
+    marginBottom: 16,
+    shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  iconWrapper: {
+    backgroundColor: "#ede9fe",
+    borderRadius: 50,
+    padding: 8,
+    marginRight: 8,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  sectionSubtitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#374151",
+    marginBottom: 12,
+    marginTop: 16,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: "white",
+    fontSize: 16,
+    color: "#1f2937",
   },
   inputWithPrefix: {
     borderWidth: 1,
-    borderColor: '#e5e7eb',
-    padding: 16,
+    borderColor: "#e5e7eb",
+    padding: 12,
     borderTopRightRadius: 12,
     borderBottomRightRadius: 12,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     fontSize: 16,
-    color: '#1f2937',
+    color: "#1f2937",
     flex: 1,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+  },
+  prefix: {
+    backgroundColor: "#f3f4f6",
+    borderTopLeftRadius: 12,
+    borderBottomLeftRadius: 12,
+    borderRightWidth: 1,
+    borderColor: "#e5e7eb",
+    paddingHorizontal: 12,
+    justifyContent: "center",
   },
   errorInput: {
-    borderColor: '#ef4444',
+    borderColor: "#ef4444",
     borderWidth: 2,
   },
   pickerContainer: {
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: "#e5e7eb",
     borderRadius: 12,
-    backgroundColor: 'white',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    backgroundColor: "white",
   },
   picker: {
-    height: 56,
-    color: '#1f2937',
+    height: 50,
+    color: "#1f2937",
+  },
+  submitBtn: {
+    backgroundColor: "#7c3aed",
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  submitBtnText: {
+    color: "white",
+    fontWeight: "700",
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  textArea: {
+    height: 100,
+    paddingTop: 12,
+  },
+  submitBtnDisabled: {
+    backgroundColor: "#9ca3af",
+    opacity: 0.7,
+  },
+  loadingSpinner: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "white",
+    borderTopColor: "transparent",
+    marginRight: 8,
+    // Note: You might want to add animation here
   },
 });

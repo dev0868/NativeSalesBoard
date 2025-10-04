@@ -416,7 +416,7 @@ export default function QuotationScreen() {
             />
           </FormField>
 
-          <FormField label="Travel Date" required error={errors.TravelDate}>
+          <FormField label="Travel Dates" required error={errors.TravelDate}>
             <Controller
               control={control}
               name="TravelDate"

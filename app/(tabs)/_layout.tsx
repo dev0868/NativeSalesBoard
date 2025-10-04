@@ -30,7 +30,7 @@ export default function TabLayout() {
           title: "Quotations",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons 
-              name={focused ? "grid" : "grid-outline"} 
+              name={focused ? "document-text" : "document-text-outline"} 
               size={24} 
               color={color} 
             />

@@ -5,7 +5,7 @@ import { View, ScrollView, Dimensions } from 'react-native'
 import QuotationModal from '../QuotationModal'
 import LastQuotesModal from '../LastQuotesModal'
 
-const QuotationCards = () => {
+const QuotationCards = ({ leadData }) => {
     const [currentPage, setCurrentPage] = useState(0);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isLastQuotesModalVisible, setIsLastQuotesModalVisible] = useState(false);
@@ -55,15 +55,15 @@ const QuotationCards = () => {
     };
 
     const handleCreateQuotation = () => {
-        // Pre-fill form with customer data from the card
+        // Pre-fill form with customer data from the lead
         const initialData = {
-            customerName: 'Rajesh Kumar',
-            contactNumber: '9876543210',
-            destination: 'Thailand',
-            departure: 'Mumbai',
-            adults: '2',
-            children: '1',
-            budget: '85000',
+            customerName: leadData?.['Client-Name'] || 'Unknown',
+            contactNumber: leadData?.['Client-Contact'] || '',
+            destination: leadData?.['Client-Destination'] || '',
+            departure: leadData?.['Client-DepartureCity'] || '',
+            adults: leadData?.['Client-Pax']?.toString() || '0',
+            children: leadData?.['Client-Child']?.toString() || '0',
+            budget: '0', // You might want to add budget field to your lead data
         };
         setIsModalVisible(true);
     };
@@ -120,8 +120,12 @@ const QuotationCards = () => {
                                     <Ionicons name="airplane" size={20} color="#7c3aed" />
                                 </View>
                                 <View className='flex flex-col'>
-                                    <Text className="text-gray-500 text-sm">Trip #24273087</Text>
-                                    <Text className="text-gray-500 text-sm">Rajesh Kumar</Text>
+                                    <Text className="text-gray-500 text-sm">
+                                        {leadData?.CompanyId || 'Lead'} - {leadData?.SalesStatus || 'New'}
+                                    </Text>
+                                    <Text className="text-gray-500 text-sm">
+                                        {leadData?.['Client-Name'] || 'Unknown Client'}
+                                    </Text>
                                 </View>
                             </View>
 
@@ -135,32 +139,71 @@ const QuotationCards = () => {
                         </View>
 
                         <Text className="text-gray-600 text-sm mb-1">Contact</Text>
-                        <Text className="text-gray-900 font-semibold mb-3">9876543210</Text>
+                        <Text className="text-gray-900 font-semibold mb-3">
+                            {leadData?.['Client-Contact'] || 'No contact'}
+                        </Text>
 
                         <View className="flex-row justify-between mb-3">
                             <View>
                                 <Text className="text-gray-500 text-xs">Destination</Text>
-                                <Text className="text-gray-900 font-medium">Thailand</Text>
+                                <Text className="text-gray-900 font-medium">
+                                    {leadData?.['Client-Destination'] || 'Not specified'}
+                                </Text>
                             </View>
                             <View>
                                 <Text className="text-gray-500 text-xs">Departure</Text>
-                                <Text className="text-gray-900 font-medium">Mumbai</Text>
+                                <Text className="text-gray-900 font-medium">
+                                    {leadData?.['Client-DepartureCity'] || 'Not specified'}
+                                </Text>
                             </View>
                         </View>
 
                         <View className="flex-row justify-between mb-4">
                             <View>
-                                <Text className="text-gray-500 text-xs">Pax</Text>
-                                <Text className="text-gray-900 font-medium">2</Text>
+                                <Text className="text-gray-500 text-xs">Adults</Text>
+                                <Text className="text-gray-900 font-medium">
+                                    {leadData?.['Client-Pax'] || 0}
+                                </Text>
                             </View>
                             <View>
-                                <Text className="text-gray-500 text-xs">Child</Text>
-                                <Text className="text-gray-900 font-medium">1</Text>
+                                <Text className="text-gray-500 text-xs">Children</Text>
+                                <Text className="text-gray-900 font-medium">
+                                    {leadData?.['Client-Child'] || 0}
+                                </Text>
+                            </View>
+                            <View>
+                                <Text className="text-gray-500 text-xs">Days</Text>
+                                <Text className="text-gray-900 font-medium">
+                                    {leadData?.['Client-Days'] || 0}
+                                </Text>
+                            </View>
+                        </View>
+
+                        <View className="flex-row justify-between mb-4">
+                            <View>
+                                <Text className="text-gray-500 text-xs">Travel Date</Text>
+                                <Text className="text-gray-900 font-medium">
+                                    {leadData?.['Client-TravelDate'] ? 
+                                        new Date(leadData['Client-TravelDate']).toLocaleDateString() : 
+                                        'Not set'
+                                    }
+                                </Text>
+                            </View>
+                            <View>
+                                <Text className="text-gray-500 text-xs">Lead Source</Text>
+                                <Text className="text-gray-900 font-medium">
+                                    {leadData?.LeadSource || 'Unknown'}
+                                </Text>
                             </View>
                         </View>
 
                         <Text className="text-gray-600 text-sm mb-1">Budget</Text>
-                        <Text className="text-purple-600 text-2xl font-bold mb-4">₹85,000</Text>
+                        <Text className="text-purple-600 text-2xl font-bold mb-4">
+                            {leadData?.['Client-Budget'] && leadData['Client-Budget'] > 0 
+                                ? `₹${leadData['Client-Budget'].toLocaleString()}` 
+                                : 'Budget not specified'
+                            }
+                        </Text>
 
                         <QuotaionButton />
                     </View>
@@ -176,8 +219,12 @@ const QuotationCards = () => {
                             </TouchableOpacity>
                             <View className='flex gap-[1rem] flex-row-reverse items-center'>
                                 <View className='flex flex-col'>
-                                    <Text className="text-gray-500 text-sm">Trip #24273087</Text>
-                                    <Text className="text-gray-500 text-sm">Rajesh Kumar</Text>
+                                    <Text className="text-gray-500 text-sm">
+                                        {leadData?.CompanyId || 'Lead'} - {leadData?.SalesStatus || 'New'}
+                                    </Text>
+                                    <Text className="text-gray-500 text-sm">
+                                        {leadData?.['Client-Name'] || 'Unknown Client'}
+                                    </Text>
                                 </View>
                                 <View className="bg-purple-100 rounded-full p-2">
                                     <Ionicons name="airplane" size={20} color="#7c3aed" />
@@ -186,11 +233,29 @@ const QuotationCards = () => {
                         </View>
 
                         <View className="space-y-4">
-                          
+                            <View className="bg-gray-50 rounded-lg p-3 mb-4">
+                                <Text className="text-gray-600 text-sm mb-2">Email</Text>
+                                <Text className="text-gray-900 font-medium">
+                                    {leadData?.['Client-Email'] || 'No email provided'}
+                                </Text>
+                            </View>
+
+                            <View className="bg-gray-50 rounded-lg p-3 mb-4">
+                                <Text className="text-gray-600 text-sm mb-2">Lead Details</Text>
+                                <Text className="text-gray-900 font-medium">
+                                    Rating: {leadData?.LeadRating || 'Not rated'} | 
+                                    Potential: {leadData?.LeadPotential || 'Unknown'}
+                                </Text>
+                            </View>
 
                             <View className="bg-gray-50 rounded-lg p-3">
-                                <Text className="text-gray-600 text-sm mb-1">Notes</Text>
-                                <Text className="text-gray-900 font-medium min-h-[9rem]">Vegetarian meals, Airport transfers Airport transfersAirport transfersAirport transfersAirport transfersAirport transfersAirport transfers</Text>
+                                <Text className="text-gray-600 text-sm mb-2">Comments</Text>
+                                <Text className="text-gray-900 font-medium min-h-[6rem]">
+                                    {leadData?.Comments && leadData.Comments.length > 0 
+                                        ? leadData.Comments[leadData.Comments.length - 1].Message 
+                                        : 'No comments available'
+                                    }
+                                </Text>
                             </View>
                         </View>
                  
@@ -213,13 +278,13 @@ const QuotationCards = () => {
             onClose={() => setIsModalVisible(false)}
             onSubmit={handleQuotationSubmit}
             initialData={{
-                customerName: 'Rajesh Kumar',
-                contactNumber: '9876543210',
-                destination: 'Thailand',
-                departure: 'Mumbai',
-                adults: '2',
-                children: '1',
-                budget: '85000',
+                customerName: leadData?.['Client-Name'] || '',
+                contactNumber: leadData?.['Client-Contact'] || '',
+                destination: leadData?.['Client-Destination'] || '',
+                departure: leadData?.['Client-DepartureCity'] || '',
+                adults: leadData?.['Client-Pax']?.toString() || '0',
+                children: leadData?.['Client-Child']?.toString() || '0',
+                budget: '0',
             }}
         />
         

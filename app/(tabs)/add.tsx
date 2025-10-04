@@ -115,6 +115,7 @@ export default function AddScreen() {
         "Client-Child": parseInt(data["Client-Child"]) || 0,
         "Client-Infant": parseInt(data["Client-Infant"]) || 0,
         "Client-Days": parseInt(data["Client-Days"]) || 0,
+        "Client-Budget": parseInt(data["Client-Budget"]) || 0,
         "Client-TravelDate": data["Client-TravelDate"]?.date || data["Client-TravelDate"],
         "Client-TravelEndDate": data["Client-TravelDate"]?.date 
           ? calculateEndDate(data["Client-TravelDate"].date, parseInt(data["Client-Days"]) || 0)
@@ -430,11 +431,12 @@ export default function AddScreen() {
                   render={({ field: { onChange, value } }) => (
                     <TextInput
                       style={styles.input}
-                      placeholder="Enter days"
-                      keyboardType="numeric"
+                      placeholder="Enter number of days"
                       value={value}
                       onChangeText={onChange}
                       placeholderTextColor="#9ca3af"
+                      keyboardType="numeric"
+                      maxLength={3}
                     />
                   )}
                 />
@@ -446,7 +448,7 @@ export default function AddScreen() {
                 <Controller
                   control={control}
                   name="Client-TravelDate"
-                  rules={{ required: "Travel Date is required" }}
+                  rules={{ required: "Travel date is required" }}
                   render={({ field: { onChange, value } }) => (
                     <DatePicker
                       value={value}
@@ -458,6 +460,24 @@ export default function AddScreen() {
               </FormField>
             </View>
           </View>
+
+          <FormField label="Budget (₹)" error={errors["Client-Budget"]}>
+            <Controller
+              control={control}
+              name="Client-Budget"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter approximate budget"
+                  value={value}
+                  onChangeText={onChange}
+                  placeholderTextColor="#9ca3af"
+                  keyboardType="numeric"
+                  maxLength={10}
+                />
+              )}
+            />
+          </FormField>
 
           {/* Passenger Information */}
           <Text style={styles.sectionSubtitle}>Passenger Information</Text>

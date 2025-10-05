@@ -19,14 +19,22 @@ const QuoatationFormWrapper = ({ sections, value, onChange, header, footer }) =>
       y: clamped * screenH,
       animated: true,
     });
-    setCurrentSection(clamped);
+    // Don't set current section immediately, let onMomentumScrollEnd handle it
   }, [sections.length, screenH]);
 
   const handleScrollEnd = useCallback((event) => {
     const offsetY = event.nativeEvent.contentOffset.y;
     const sectionIndex = Math.round(offsetY / screenH);
-    setCurrentSection(sectionIndex);
-  }, [screenH]);
+    const clampedIndex = Math.max(0, Math.min(sectionIndex, sections.length - 1));
+    setCurrentSection(clampedIndex);
+  }, [screenH, sections.length]);
+
+  const handleScroll = useCallback((event) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    const sectionIndex = Math.round(offsetY / screenH);
+    const clampedIndex = Math.max(0, Math.min(sectionIndex, sections.length - 1));
+    setCurrentSection(clampedIndex);
+  }, [screenH, sections.length]);
 
   const SectionWrapper = ({ index, children }) => (
     <View style={{ height: screenH, backgroundColor: 'white' }}>
@@ -166,13 +174,15 @@ const QuoatationFormWrapper = ({ sections, value, onChange, header, footer }) =>
         ref={scrollViewRef}
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
         onMomentumScrollEnd={handleScrollEnd}
         scrollEventThrottle={16}
-        bounces={false}
-        decelerationRate={0.65}
+        bounces={true}
+        decelerationRate="normal"
         snapToInterval={screenH}
         snapToAlignment="start"
-        disableIntervalMomentum={false}
+        disableIntervalMomentum={true}
+        pagingEnabled={false}
       >
         {sections.map((Section, i) => (
           <SectionWrapper key={`section-${i}`} index={i}>

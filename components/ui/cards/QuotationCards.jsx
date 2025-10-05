@@ -41,14 +41,40 @@ const QuotationCards = ({ leadData }) => {
           <Text className="text-purple-600 font-medium text-center">Last 10 Quotes</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => router.push('/(tabs)/QuotationScreen')}
+          onPress={() => {
+            // Convert lead data to the format expected by the form
+            const formattedLeadData = {
+              TripId: leadData?.TripId || `TRP-${Date.now()}`,
+              ClientLeadDetails: {
+                FullName: leadData?.['Client-Name'] || '',
+                Contact: leadData?.['Client-Contact'] || '',
+                Email: leadData?.['Client-Email'] || '',
+                TravelDate: leadData?.['Client-TravelDate'] || '',
+                Pax: leadData?.['Client-Pax'] || '1',
+                Child: leadData?.['Client-Child'] || '0',
+                Infant: '0',
+                Budget: leadData?.['Client-Budget'] || '',
+                DepartureCity: leadData?.['Client-DepartureCity'] || '',
+                DestinationName: leadData?.['Client-Destination'] || '',
+                Days: leadData?.['Client-Days'] || 2,
+              },
+              AssignDate: new Date().toISOString().split('T')[0],
+            };
+            
+            router.push({
+              pathname: '/(tabs)/QuotationScreen',
+              params: { 
+                leadData: JSON.stringify(formattedLeadData)
+              }
+            });
+          }}
           className="bg-green-500 rounded-lg px-4 py-2 flex-1 ml-2"
         >
           <Text className="text-white font-medium text-center">Create Quote</Text>
         </TouchableOpacity>
       </View>
     ),
-    [router]
+    [router, leadData]
   );
 
   const renderItem = useCallback(

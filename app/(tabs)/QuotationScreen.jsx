@@ -1,35 +1,40 @@
 
-import React, { useState, useCallback } from 'react';
-import { View, Text } from 'react-native';
-import { BasicDetails, TripDetails, Notes } from './ExampleSections';
-import QuoatationFormWrapper from '@/components/form/quotationForm/QuoatationFormWrapper';
+import React, { useState } from 'react';
+import { View, Text, Alert } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import IntegratedQuotationForm from '@/components/form/IntegratedQuotationForm';
+
 const QuotationScreen = () => {
-  const [form, setForm] = useState({
-    name: '', email: '', phone: '',
-    destination: '', days: 0, budget: '', notes: '',
-  });
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  
+  // You can pass lead data through navigation params if needed
+  const leadData = params.leadData ? JSON.parse(params.leadData) : null;
 
-  const onChange = useCallback((patch) => setForm((f) => ({ ...f, ...patch })), []);
-
-  const sections = [
-    (p) => <BasicDetails {...p} />,
-    (p) => <TripDetails {...p} />,
-    (p) => <Notes {...p} />,
-  ];
+  const handleFormSubmit = (data) => {
+    console.log('Quotation Form Submitted:', data);
+    
+    // Here you would typically:
+    // 1. Validate the data
+    // 2. Send to your API
+    // 3. Handle success/error responses
+    
+    Alert.alert(
+      'Success',
+      'Quotation created successfully!',
+      [
+        {
+          text: 'OK',
+          onPress: () => router.back()
+        }
+      ]
+    );
+  };
 
   return (
-    <QuoatationFormWrapper
-      sections={sections}
-      value={form}
-      onChange={onChange}
-      header={<Text style={{ fontSize: 18, fontWeight: '700', marginBottom: 8 }}>Create Quotation</Text>}
-      footer={
-        <View style={{ marginTop: 16 }}>
-          <Text style={{ color: '#6b7280', fontSize: 12 }}>
-            Swipe up/down to change sections. Fields auto-save.
-          </Text>
-        </View>
-      }
+    <IntegratedQuotationForm
+      onSubmit={handleFormSubmit}
+      lead={leadData}
     />
   );
 };

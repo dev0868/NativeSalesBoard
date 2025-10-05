@@ -240,13 +240,7 @@ const QuotationCards = ({ leadData }) => {
                                 </Text>
                             </View>
 
-                            <View className="bg-gray-50 rounded-lg p-3 mb-4">
-                                <Text className="text-gray-600 text-sm mb-2">Lead Details</Text>
-                                <Text className="text-gray-900 font-medium">
-                                    Rating: {leadData?.LeadRating || 'Not rated'} | 
-                                    Potential: {leadData?.LeadPotential || 'Unknown'}
-                                </Text>
-                            </View>
+                    
 
                             <View className="bg-gray-50 rounded-lg p-3">
                                 <Text className="text-gray-600 text-sm mb-2">Comments</Text>

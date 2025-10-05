@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import React from "react";
-import { View, TouchableOpacity } from "react-native";
+import { View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function TabLayout() {
@@ -51,7 +51,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="add"
+        name="newLeadForm"
         options={{
           title: "",
           tabBarIcon: ({ color }) => (

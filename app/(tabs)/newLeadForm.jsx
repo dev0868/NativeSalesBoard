@@ -13,8 +13,6 @@ import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons";
 import Navbar from "@/components/Navbar";
 import DatePicker from "@/components/ui/DatePicker";
-import MultiSelectDestinations from "@/components/ui/MultiSelectDestinations";
-import ToggleSwitch from "@/components/ui/ToggleSwitch";
 import { getSalesPersonInfo } from "@/utils/userProfile";
 
 const DestinationList = [
@@ -38,55 +36,27 @@ const DestinationList = [
   "Sri Lanka"
 ];
 
-const DepartureCities = [
-  "Mumbai",
-  "Delhi",
-  "Bangalore",
-  "Chennai",
-  "Kolkata",
-  "Hyderabad",
-  "Pune",
-  "Ahmedabad",
-  "Kochi",
-  "Goa"
-];
-
-const LeadSources = [
-  "WebApp",
-  "Instagram", 
-  "Facebook",
-  "WhatsApp",
-  "Direct",
-  "Referral",
-  "Google Ads",
-  "Walk-in"
-];
-
-const LeadPotentials = ["High", "Medium", "Low"];
-const LeadRatings = ["Hot", "Warm", "Cold"];
-
-export default function AddScreen() {
+export default function NewLeadForm() {
   const {
     control,
     handleSubmit,
     formState: { errors },
-    setValue,
     reset,
   } = useForm();
 
   // State for multi-select destinations
-  const [selectedDestinations, setSelectedDestinations] = useState<string[]>([]);
+  const [selectedDestinations, setSelectedDestinations] = useState([]);
   const [isMultiDestination, setIsMultiDestination] = useState(false);
   
   // Loading state for API call
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data) => {
     setIsSubmitting(true);
     
     try {
       // Calculate end date
-      const calculateEndDate = (startDate: string, days: number) => {
+      const calculateEndDate = (startDate, days) => {
         const start = new Date(startDate);
         const end = new Date(start);
         end.setDate(start.getDate() + days - 1);
@@ -145,7 +115,6 @@ export default function AddScreen() {
 
       console.log("Lead Data:", JSON.stringify(leadData, null, 2));
 
-      // Make API call
       const response = await fetch('https://0rq0f90i05.execute-api.ap-south-1.amazonaws.com/salesapp/lead-managment/create-quote', {
         method: 'POST',
         headers: {
@@ -157,7 +126,6 @@ export default function AddScreen() {
       const responseData = await response.json();
 
       if (response.ok) {
-        // Success - Show success alert and reset form
         Alert.alert(
           "Success", 
           "Lead created successfully!", 
@@ -165,9 +133,7 @@ export default function AddScreen() {
             { 
               text: "OK", 
               onPress: () => {
-                // Reset form fields
                 reset();
-                // Reset custom states
                 setSelectedDestinations([]);
                 setIsMultiDestination(false);
               }
@@ -175,7 +141,6 @@ export default function AddScreen() {
           ]
         );
       } else {
-        // API returned error
         Alert.alert(
           "Error", 
           responseData.message || "Failed to create lead. Please try again.", 
@@ -184,7 +149,6 @@ export default function AddScreen() {
       }
 
     } catch (error) {
-      // Network or other error
       console.error("Error creating lead:", error);
       Alert.alert(
         "Error", 
@@ -201,11 +165,6 @@ export default function AddScreen() {
     children,
     required = false,
     error,
-  }: {
-    label: string;
-    children: React.ReactNode;
-    required?: boolean;
-    error?: any;
   }) => (
     <View style={{ marginBottom: 24 }}>
       <Text style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}>

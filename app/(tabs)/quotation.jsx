@@ -18,30 +18,7 @@ const AlternativeContactsList = [
   "WhatsApp", "Email", "Phone", "Instagram", "Facebook", "Telegram"
 ];
 
-interface QuotationFormData {
-  TripId: string;
-  Name: string;
-  ContactNo: string;
-  Email: string;
-  Destination: string;
-  TravelDate: string;
-  DepartureCity: string;
-  AssignDate: string;
-  Pax: string;
-  Child: string;
-  Budget: string;
-  Infants: string;
-  Days: string;
-  Nights: string;
-  Currency: string;
-  PerPerson: string;
-  PerCouple: string;
-  Total: string;
-  FlightCost: string;
-  VisaCost: string;
-  LandPackageCost: string;
-  TotalCost: string;
-}
+
 
 export default function QuotationScreen() {
   const {
@@ -50,7 +27,7 @@ export default function QuotationScreen() {
     watch,
     setValue,
     formState: { errors },
-  } = useForm<QuotationFormData>({
+  } = useForm({
     defaultValues: {
       TripId: "254826160",
       AssignDate: "2025-09-30",
@@ -77,8 +54,8 @@ export default function QuotationScreen() {
     }
   });
 
-  const [selectedOtherDestinations, setSelectedOtherDestinations] = useState<string[]>([]);
-  const [selectedAlternativeContacts, setSelectedAlternativeContacts] = useState<string[]>([]);
+  const [selectedOtherDestinations, setSelectedOtherDestinations] = useState([]);
+  const [selectedAlternativeContacts, setSelectedAlternativeContacts] = useState([]);
   
   const watchedDays = watch("Days");
   const watchedNights = watch("Nights");
@@ -111,7 +88,7 @@ export default function QuotationScreen() {
     setValue("TotalCost", total.toString());
   }, [watchedFlightCost, watchedVisaCost, watchedLandPackageCost, setValue]);
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data) => {
     const formData = {
       ...data,
       OtherDestinations: selectedOtherDestinations,
@@ -130,11 +107,6 @@ export default function QuotationScreen() {
     children, 
     required = false, 
     error 
-  }: { 
-    label: string; 
-    children: React.ReactNode; 
-    required?: boolean; 
-    error?: any;
   }) => (
     <View className="mb-6">
       <Text className="text-gray-700 font-semibold mb-2 text-base">
@@ -152,13 +124,6 @@ export default function QuotationScreen() {
     onSelectionChange,
     allowCustom = false,
     placeholder = "Select options"
-  }: {
-    label: string;
-    options: string[];
-    selectedValues: string[];
-    onSelectionChange: (values: string[]) => void;
-    allowCustom?: boolean;
-    placeholder?: string;
   }) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [customInput, setCustomInput] = useState("");
@@ -173,7 +138,7 @@ export default function QuotationScreen() {
       }
     };
 
-    const removeSelectedItem = (item: string) => {
+    const removeSelectedItem = (item) => {
       onSelectionChange(selectedValues.filter(v => v !== item));
     };
 

@@ -78,14 +78,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="quotation"
         options={{
-          title: "Quotation",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons 
-              name={focused ? "document-text" : "document-text-outline"} 
-              size={24} 
-              color={color} 
-            />
-          ),
+          href: null, // This hides it from the tab bar but keeps it accessible
+          title: "Create Quotation",
         }}
       />
       <Tabs.Screen

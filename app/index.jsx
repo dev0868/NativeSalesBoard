@@ -7,11 +7,9 @@ export default function Index() {
     const checkAuthAndRedirect = async () => {
       try {
         const userProfile = await AsyncStorage.getItem("userProfile");
-        // If userProfile exists (not null/undefined), navigate to home
         if (userProfile !== null && userProfile !== undefined) {
           router.replace("/(tabs)");
         } else {
-          // No userProfile found, go to auth (create account)
           router.replace("/(auth)");
         }
       } catch (error) {
@@ -23,5 +21,5 @@ export default function Index() {
     checkAuthAndRedirect();
   }, []);
 
-  return null; // This component just handles redirection
+  return null; 
 }

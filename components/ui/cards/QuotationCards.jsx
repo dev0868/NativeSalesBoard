@@ -1,10 +1,12 @@
 import React, { useMemo, useRef, useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, FlatList, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import QuotationModal from '../QuotationModal';
 import LastQuotesModal from '../LastQuotesModal';
 
 const QuotationCards = ({ leadData }) => {
+  const router = useRouter();
   const screenWidth = Dimensions.get('window').width;
   const cardWidth = useMemo(() => screenWidth - 32, [screenWidth]); // margins
   const listRef = useRef(null);
@@ -39,14 +41,14 @@ const QuotationCards = ({ leadData }) => {
           <Text className="text-purple-600 font-medium text-center">Last 10 Quotes</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => setIsModalVisible(true)}
+          onPress={() => router.push('/(tabs)/quotation')}
           className="bg-green-500 rounded-lg px-4 py-2 flex-1 ml-2"
         >
           <Text className="text-white font-medium text-center">Create Quote</Text>
         </TouchableOpacity>
       </View>
     ),
-    []
+    [router]
   );
 
   const renderItem = useCallback(

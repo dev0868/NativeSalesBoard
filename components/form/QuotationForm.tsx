@@ -110,7 +110,7 @@ const QuotationForm: React.FC<QuotationFormProps> = ({
   return (
     <View className="flex-1 bg-white">
       {/* Header */}
-      <View className="flex-row items-center justify-between p-4 border-b border-gray-200">
+      <View className="flex-row items-center justify-between p- border-b border-gray-200">
         <Text className="text-xl font-bold text-gray-900">New Quotation</Text>
         <TouchableOpacity
           onPress={onClose}

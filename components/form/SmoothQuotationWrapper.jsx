@@ -5,15 +5,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-interface SmoothQuotationWrapperProps {
-  sections: React.ComponentType<any>[];
-  value: any;
-  onChange: (field: string, value: any) => void;
-  header?: React.ReactNode;
-  footer?: React.ReactNode;
-}
 
-const SmoothQuotationWrapper: React.FC<SmoothQuotationWrapperProps> = ({ 
+
+const SmoothQuotationWrapper = ({ 
   sections, 
   value, 
   onChange, 
@@ -24,7 +18,7 @@ const SmoothQuotationWrapper: React.FC<SmoothQuotationWrapperProps> = ({
   const insets = useSafeAreaInsets();
   const [currentSection, setCurrentSection] = useState(0);
 
-  const goToSection = useCallback((sectionIndex: number) => {
+  const goToSection = useCallback((sectionIndex) => {
     const clamped = Math.max(0, Math.min(sectionIndex, sections.length - 1));
     setCurrentSection(clamped);
   }, [sections.length]);

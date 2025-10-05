@@ -1,12 +1,12 @@
 import React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import SimpleQuotationWrapper from './SimpleQuotationWrapper';
-import BasicDetails from './BasicDetails';
-import CostCalculator from './CostCalculator';
-import HotelsSection from './HotelsSection';
-import InclusionsExclusions from './InclusionsExclusions';
-import FlightSection from './FlightSection';
-import ItinerarySection from './ItinerarySection';
+import BasicDetails from './BasicDetailsNew';
+import CostCalculator from './CostCalculatorNew';
+import HotelsSection from './HotelsSectionNew';
+import InclusionsExclusions from './InclusionsExclusionsNew';
+import FlightSection from './FlightSectionNew';
+import ItinerarySection from './ItinerarySectionNew';
 
 interface QuotationFormData {
   TripId: string;

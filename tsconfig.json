@@ -14,5 +14,5 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
     "nativewind-env.d.ts"
-, "app/(auth)/_layout.jsx", "app/modal.jsx", "app/index.jsx", "app/_layout.jsx", "app/(tabs)/newLeadForm.jsx", "components/form/quotationForm/QuotationScreen.jsx", "app/(tabs)/_layout.jsx", "utils/userProfile.js", "components/Navbar.jsx"  ]
+, "app/(auth)/_layout.jsx", "app/modal.jsx", "app/index.jsx", "app/_layout.jsx", "app/(tabs)/newLeadForm.jsx", "components/form/quotationForm/QuotationScreen.jsx", "app/(tabs)/_layout.jsx", "utils/userProfile.js", "components/Navbar.jsx", "components/form/SmoothQuotationWrapper.jsx", "components/form/SimpleQuotationWrapper.jsx"  ]
 }

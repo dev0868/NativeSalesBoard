@@ -5,15 +5,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-interface SimpleQuotationWrapperProps {
-  sections: React.ComponentType<any>[];
-  value: any;
-  onChange: (field: string, value: any) => void;
-  header?: React.ReactNode;
-  footer?: React.ReactNode;
-}
 
-const SimpleQuotationWrapper: React.FC<SimpleQuotationWrapperProps> = ({ 
+const SimpleQuotationWrapper = ({ 
   sections, 
   value, 
   onChange, 
@@ -24,7 +17,7 @@ const SimpleQuotationWrapper: React.FC<SimpleQuotationWrapperProps> = ({
   const insets = useSafeAreaInsets();
   const [currentSection, setCurrentSection] = useState(0);
 
-  const goToSection = useCallback((sectionIndex: number) => {
+  const goToSection = useCallback((sectionIndex) => {
     const clamped = Math.max(0, Math.min(sectionIndex, sections.length - 1));
     setCurrentSection(clamped);
   }, [sections.length]);
@@ -76,23 +69,11 @@ const SimpleQuotationWrapper: React.FC<SimpleQuotationWrapperProps> = ({
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={{ flex: 1 }}
         >
-          {/* Section Header */}
-          <View style={{ 
-            paddingHorizontal: 16, 
-            paddingVertical: 12, 
-            backgroundColor: '#f9fafb',
-            borderBottomWidth: 1,
-            borderBottomColor: '#e5e7eb'
-          }}>
-            <Text style={{ fontSize: 14, color: '#6b7280', textAlign: 'center' }}>
-              Section {currentSection + 1} of {sections.length}
-            </Text>
-          </View>
-
+         
           {/* Section Content */}
           <ScrollView 
             style={{ flex: 1 }}
-            contentContainerStyle={{ padding: 16, flexGrow: 1 }}
+            contentContainerStyle={{ padding: 0, flexGrow: 1 }}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >

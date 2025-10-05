@@ -13,7 +13,7 @@ import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons";
 import Navbar from "@/components/Navbar";
 import DatePicker from "@/components/ui/DatePicker";
-import { getSalesPersonInfo } from "@/utils/userProfile";
+import { getUserProfile } from "@/utils/userProfile";
 
 const DestinationList = [
   "Bali",
@@ -64,7 +64,7 @@ export default function NewLeadForm() {
       };
 
       // Get sales person info from AsyncStorage
-      const salesPersonInfo = await getSalesPersonInfo();
+      const salesPersonInfo = await getUserProfile();
       console.log(salesPersonInfo);
 
       // Create the lead object matching your JSON structure

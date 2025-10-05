@@ -4,7 +4,7 @@ import QuotationCards from "@/components/ui/cards/QuotationCards";
 import { Ionicons } from "@expo/vector-icons";
 import { useRef, useState, useEffect } from "react";
 import { Animated } from "react-native";
-import { getSalesPersonInfo } from "@/utils/userProfile";
+import axios from "axios";
 
 export default function HomeScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -21,32 +21,27 @@ export default function HomeScreen() {
       setError(null);
       
       // Get sales person info from AsyncStorage
-      const salesPersonInfo = await getSalesPersonInfo();
-      const salesPersonUid = encodeURIComponent(salesPersonInfo.FullName || "Devesh bisht");
+      // const salesPersonInfo = await getSalesPersonInfo();
+      // const salesPersonUid = encodeURIComponent(salesPersonInfo.FullName || "Devesh bisht");
       
-      console.log("Fetching leads for:", salesPersonUid);
+      // console.log("Fetching leads for:", salesPersonUid);
       
       // Make API call
-      const response = await fetch(
-        `https://0rq0f90i05.execute-api.ap-south-1.amazonaws.com/salesapp/lead-managment/create-quote?SalesPersonUid=${salesPersonUid}`
+      const response = await axios.get(
+        `https://0rq0f90i05.execute-api.ap-south-1.amazonaws.com/salesapp/lead-managment/create-quote?SalesPersonUid=Devesh bisht`
       );
       
-      if (response.ok) {
-        const data = await response.json();
-        console.log("API Response:", data);
-        
-        // Handle different response formats
-        if (Array.isArray(data)) {
-          setLeads(data);
-        } else if (data.leads && Array.isArray(data.leads)) {
-          setLeads(data.leads);
-        } else if (data.data && Array.isArray(data.data)) {
-          setLeads(data.data);
-        } else {
-          setLeads([]);
-        }
+      console.log("API Response:", response.data);
+      
+      // Handle different response formats
+      if (Array.isArray(response.data)) {
+        setLeads(response.data);
+      } else if (response.data.leads && Array.isArray(response.data.leads)) {
+        setLeads(response.data.leads);
+      } else if (response.data.data && Array.isArray(response.data.data)) {
+        setLeads(response.data.data);
       } else {
-        throw new Error(`API Error: ${response.status}`);
+        setLeads([]);
       }
     } catch (error: any) {
       console.error("Error fetching leads:", error);

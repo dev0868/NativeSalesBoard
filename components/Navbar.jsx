@@ -6,15 +6,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Updates from "expo-updates";
 import { router } from "expo-router";
 
-interface NavbarProps {
-  title: string;
-  subtitle?: string;
-  showSearch?: boolean;
-  showNotifications?: boolean;
-  showBack?: boolean;
-  onBackPress?: () => void;
-  onNotificationPress?: () => void;
-}
+
 
 export default function Navbar({
   title,
@@ -23,19 +15,17 @@ export default function Navbar({
   showNotifications = true,
   showBack = false,
   onBackPress,
-  onNotificationPress,
-}: NavbarProps) {
+}) {
   const insets = useSafeAreaInsets();
 
   return (
     <LinearGradient
-    colors={['#7c3aed', '#5b21b6']} // from purple-600 to purple-800
+    colors={['#7c3aed', '#5b21b6']} 
     start={{ x: 0, y: 0 }}
     end={{ x: 1, y: 1 }}
     className="rounded-b-3xl px-4 pb-6"
     style={{ paddingTop: insets.top + 16 }}
   >
-      {/* Top Row with Search/Back and Notifications */}
       <View className="flex-row items-center justify-between mb-4">
         {showSearch && !showBack && (
           <Pressable onPress={async() =>  await   AsyncStorage.removeItem("createAccount") } className="flex-row items-center bg-white/20 rounded-full px-4 py-3 flex-1 mr-4">
@@ -65,17 +55,13 @@ export default function Navbar({
               try {
                 await AsyncStorage.removeItem("createAccount");
                 
-                // Check if we're in development or production
                 if (__DEV__) {
-                  // In development, use router navigation
                   router.replace("/(auth)");
                 } else {
-                  // In production, use Updates.reloadAsync()
                   await Updates.reloadAsync();
                 }
               } catch (error) {
                 console.error("Error during logout:", error);
-                // Fallback to router navigation
                 router.replace("/(auth)");
               }
             }}

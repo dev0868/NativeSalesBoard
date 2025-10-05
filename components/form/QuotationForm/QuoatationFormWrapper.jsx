@@ -1,44 +1,19 @@
-// QuotationFormPager.tsx
 import React, { useMemo, useRef, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Dimensions, KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Dimensions, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Example: keep form state at the parent and pass setters to sections
-type QuotationForm = {
-  name: string;
-  email: string;
-  phone: string;
-  destination: string;
-  days: number;
-  budget: string;
-  notes: string;
-};
-
-type SectionProps = {
-  value: QuotationForm;
-  onChange: (patch: Partial<QuotationForm>) => void;
-  goNext: () => void;
-  goPrev: () => void;
-};
-
-type Props = {
-  sections: Array<(props: SectionProps) => React.ReactElement>;
-  value: QuotationForm;
-  onChange: (patch: Partial<QuotationForm>) => void;
-  header?: React.ReactNode;
-  footer?: React.ReactNode;
-};
-
-const QuotationFormPager: React.FC<Props> = ({ sections, value, onChange, header, footer }) => {
+const QuoatationFormWrapper = ({ sections, value, onChange, header, footer }) => {
   const router = useRouter();
-  const scrollViewRef = useRef<ScrollView>(null);
+  const insets = useSafeAreaInsets();
+  const scrollViewRef = useRef(null);
   const { height: windowHeight } = Dimensions.get('window');
-  // Account for navbar (approximately 60px) and safe area
   const screenH = windowHeight - 120;
   const [currentSection, setCurrentSection] = useState(0);
 
-  const scrollToSection = useCallback((sectionIndex: number) => {
+  const scrollToSection = useCallback((sectionIndex) => {
     const clamped = Math.max(0, Math.min(sectionIndex, sections.length - 1));
     scrollViewRef.current?.scrollTo({
       y: clamped * screenH,
@@ -47,44 +22,13 @@ const QuotationFormPager: React.FC<Props> = ({ sections, value, onChange, header
     setCurrentSection(clamped);
   }, [sections.length, screenH]);
 
-  const handleScrollEnd = useCallback((event: any) => {
+  const handleScrollEnd = useCallback((event) => {
     const offsetY = event.nativeEvent.contentOffset.y;
     const sectionIndex = Math.round(offsetY / screenH);
     setCurrentSection(sectionIndex);
   }, [screenH]);
 
-  const NavBar = () => (
-    <View style={{
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      backgroundColor: 'white',
-      borderBottomWidth: 1,
-      borderBottomColor: '#f3f4f6',
-    }}>
-      <TouchableOpacity
-        onPress={() => router.back()}
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          padding: 8,
-        }}
-      >
-        <Ionicons name="chevron-back" size={24} color="#374151" />
-        <Text style={{ marginLeft: 4, fontSize: 16, color: '#374151' }}>Back</Text>
-      </TouchableOpacity>
-      
-      <Text style={{ fontSize: 18, fontWeight: '600', color: '#1f2937' }}>
-        Create Quotation
-      </Text>
-      
-      <View style={{ width: 60 }} />
-    </View>
-  );
-
-  const SectionWrapper: React.FC<{ index: number; children: React.ReactNode }> = ({ index, children }) => (
+  const SectionWrapper = ({ index, children }) => (
     <View style={{ height: screenH, backgroundColor: 'white' }}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -177,9 +121,47 @@ const QuotationFormPager: React.FC<Props> = ({ sections, value, onChange, header
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f3f4f6' }}>
-      <NavBar />
-      
+    <View style={{ flex: 1, backgroundColor: '#7c3aed' }}>
+      <LinearGradient
+        colors={['#7c3aed', '#5b21b6']} 
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{
+          paddingTop: insets.top + 2,
+          paddingBottom: 2,
+          paddingHorizontal: 16,
+          borderBottomLeftRadius: 24,
+          borderBottomRightRadius: 24,
+        }}
+      >
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 16,
+        }}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={{
+              backgroundColor: 'rgba(255,255,255,0.2)',
+              borderRadius: 20,
+              padding: 8,
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}
+          >
+            <Ionicons name="arrow-back" size={24} color="white" />
+          </TouchableOpacity>
+          <View>
+          <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>
+            Create Quotation
+          </Text>
+        
+        </View>
+        </View>
+
+     
+      </LinearGradient>
       <ScrollView
         ref={scrollViewRef}
         style={{ flex: 1 }}
@@ -204,7 +186,6 @@ const QuotationFormPager: React.FC<Props> = ({ sections, value, onChange, header
         ))}
       </ScrollView>
 
-      {/* Section Indicators */}
       <View style={{
         position: 'absolute',
         right: 16,
@@ -226,8 +207,8 @@ const QuotationFormPager: React.FC<Props> = ({ sections, value, onChange, header
           />
         ))}
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
-export default QuotationFormPager;
+export default QuoatationFormWrapper;

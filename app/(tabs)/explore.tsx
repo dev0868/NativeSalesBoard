@@ -5,14 +5,11 @@ import Navbar from "@/components/Navbar";
 export default function ExploreScreen() {
   return (
     <View className="flex-1 bg-gray-50">
-      {/* Navbar */}
-      <Navbar 
+      <Navbar
         title="Explore Destinations"
         subtitle="Discover amazing places to visit"
         showSearch={true}
-        showNotifications={true}
-        onNotificationPress={() => console.log('Notifications pressed')}
-      />
+        showNotifications={true} onBackPress={undefined}      />
 
       <ScrollView className="flex-1 px-4 pt-6">
         {/* Popular Destinations */}
@@ -84,10 +81,7 @@ export default function ExploreScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      </ScrollView>
-
-      {/* Floating Plus Button */}
-   
+      </ScrollView>   
     </View>
   );
 }

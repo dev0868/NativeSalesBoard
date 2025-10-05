@@ -1,5 +1,4 @@
 import { View, Text, ScrollView, TouchableOpacity, FlatList } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import Navbar from "@/components/Navbar";
 import FollowUpCards from "@/components/ui/cards/FollowUpCards";
 

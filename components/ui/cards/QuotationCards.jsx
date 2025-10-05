@@ -41,7 +41,7 @@ const QuotationCards = ({ leadData }) => {
           <Text className="text-purple-600 font-medium text-center">Last 10 Quotes</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => router.push('/(tabs)/quotation')}
+          onPress={() => router.push('/(tabs)/QuotationScreen')}
           className="bg-green-500 rounded-lg px-4 py-2 flex-1 ml-2"
         >
           <Text className="text-white font-medium text-center">Create Quote</Text>

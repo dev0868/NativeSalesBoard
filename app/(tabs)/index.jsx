@@ -1,12 +1,11 @@
-import React, { useRef, useState, useCallback } from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator, Animated } from "react-native";
+import React, { useRef, useState, useCallback, useMemo } from "react";
+import { View, Text, TouchableOpacity, ActivityIndicator, Animated, FlatList } from "react-native";
 import Navbar from "@/components/Navbar";
 import QuotationCards from "@/components/ui/cards/QuotationCards";
 import { Ionicons } from "@expo/vector-icons";
-import axios from "axios";
 import { useFocusEffect } from "@react-navigation/native";
 
-const AnimatedFlatList = Animated.FlatList;
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
 export default function HomeScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -16,43 +15,45 @@ export default function HomeScreen() {
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchLeads = useCallback(async (mode = "initial", signal) => {
-    if (mode === "initial") setLoading(true);
-    else setRefreshing(true);
+  const parseLeads = useCallback((raw) => {
+    if (Array.isArray(raw)) return raw;
+    if (Array.isArray(raw?.leads)) return raw.leads;
+    if (Array.isArray(raw?.data)) return raw.data;
+    return [];
+  }, []);
 
-    try {
-      setError(null);
+  const fetchLeads = useCallback(
+    async (mode = "initial", signal) => {
+      if (mode === "initial") setLoading(true);
+      else setRefreshing(true);
 
-      const salesPersonUid = encodeURIComponent("Devesh bisht");
-      const url = `https://0rq0f90i05.execute-api.ap-south-1.amazonaws.com/salesapp/lead-managment/create-quote?SalesPersonUid=${salesPersonUid}`;
+      try {
+        setError(null);
 
-      const res = await axios.get(url, { timeout: 20000, signal });
+        const salesPersonUid = encodeURIComponent("Devesh bisht");
+        const url = `https://0rq0f90i05.execute-api.ap-south-1.amazonaws.com/salesapp/lead-managment/create-quote?SalesPersonUid=${salesPersonUid}`;
 
-      const raw = res?.data;
-      const data = Array.isArray(raw)
-        ? raw
-        : Array.isArray(raw?.leads)
-        ? raw.leads
-        : Array.isArray(raw?.data)
-        ? raw.data
-        : [];
+        const res = await fetch(url, { signal });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
 
-      setLeads(data ?? []);
-    } catch (e) {
-      if (axios.isCancel?.(e) || e?.name === "CanceledError" || e?.message === "canceled") {
-        // request was canceled — ignore
-      } else {
+        const data = parseLeads(json);
+        setLeads(Array.isArray(data) ? data : []);
+      } catch (e) {
+        // Abort? ignore
+        if (e?.name === "AbortError") return;
         console.error("Error fetching leads:", e);
         setError(e?.message || "Failed to fetch leads");
         setLeads([]);
+      } finally {
+        if (mode === "initial") setLoading(false);
+        setRefreshing(false);
       }
-    } finally {
-      if (mode === "initial") setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
+    },
+    [parseLeads]
+  );
 
-  // Refetch every time the screen gains focus. Cancel on blur.
+  // Refetch on focus; cancel on blur
   useFocusEffect(
     useCallback(() => {
       const controller = new AbortController();
@@ -63,19 +64,20 @@ export default function HomeScreen() {
 
   const onRefresh = useCallback(() => fetchLeads("refresh"), [fetchLeads]);
 
-  const onScroll = useRef(
-    Animated.event(
-      [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-      { useNativeDriver: true }
-    )
-  ).current;
+  const onScroll = useMemo(
+    () =>
+      Animated.event(
+        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+        { useNativeDriver: true }
+      ),
+    [scrollY]
+  );
+
+  const keyExtractor = useCallback((item, index) => String(item?.id ?? item?._id ?? index), []);
 
   const renderItem = useCallback(({ item }) => {
+    if (!item) return null;
     return <QuotationCards leadData={item} />;
-  }, []);
-
-  const keyExtractor = useCallback((item, index) => {
-    return String(item?.id ?? item?._id ?? index);
   }, []);
 
   return (
@@ -90,7 +92,7 @@ export default function HomeScreen() {
 
       {loading ? (
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <ActivityIndicator size="large" color="#7c3aed" />
+          <ActivityIndicator size="large" />
           <Text style={{ marginTop: 16, fontSize: 16, color: "#6b7280" }}>Loading leads...</Text>
         </View>
       ) : error ? (
@@ -99,9 +101,7 @@ export default function HomeScreen() {
           <Text style={{ marginTop: 16, fontSize: 18, fontWeight: "600", color: "#1f2937", textAlign: "center" }}>
             Error Loading Leads
           </Text>
-          <Text style={{ marginTop: 8, fontSize: 14, color: "#6b7280", textAlign: "center" }}>
-            {error}
-          </Text>
+          <Text style={{ marginTop: 8, fontSize: 14, color: "#6b7280", textAlign: "center" }}>{error}</Text>
           <TouchableOpacity
             onPress={() => fetchLeads("initial")}
             style={{ marginTop: 24, backgroundColor: "#7c3aed", paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 }}

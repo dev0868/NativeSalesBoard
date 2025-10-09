@@ -9,10 +9,10 @@ import {
   Alert,
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
-import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons";
 import Navbar from "@/components/Navbar";
 import DatePicker from "@/components/ui/DatePicker";
+import CustomPicker from "@/components/ui/CustomPicker";
 import { getUserProfile } from "@/utils/userProfile";
 
 const DestinationList = [
@@ -35,6 +35,7 @@ const DestinationList = [
   "Bhutan",
   "Sri Lanka"
 ];
+
 
 export default function NewLeadForm() {
   const {
@@ -324,22 +325,13 @@ export default function NewLeadForm() {
                 name="Client-Destination"
                 rules={{ required: "Destination is required" }}
                 render={({ field: { onChange, value } }) => (
-                  <View style={styles.pickerContainer}>
-                    <Picker
-                      selectedValue={value}
-                      style={styles.picker}
-                      onValueChange={onChange}
-                    >
-                      <Picker.Item label="Select destination" value="" />
-                      {DestinationList.map((destination, idx) => (
-                        <Picker.Item
-                          label={destination}
-                          value={destination}
-                          key={idx}
-                        />
-                      ))}
-                    </Picker>
-                  </View>
+                  <CustomPicker
+                    items={DestinationList}
+                    selectedValue={value}
+                    onValueChange={onChange}
+                    placeholder="Select destination"
+                    title="Select Destination"
+                  />
                 )}
               />
             </FormField>

@@ -5,17 +5,43 @@ import {
   TouchableOpacity,
   Modal,
   StyleSheet,
+  ScrollView,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons";
 
-interface DatePickerProps {
-  value?: string;
-  onDateChange: (date: string) => void;
-  placeholder?: string;
-  style?: any;
-  disabled?: boolean;
-}
+// Inline Picker Component for DatePicker (no modal, just scrollable list)
+const InlinePicker = ({ items, selectedValue, onValueChange }) => {
+  return (
+    <ScrollView style={styles.inlinePickerContainer} showsVerticalScrollIndicator={false}>
+      {items.map((item, index) => {
+        const value = typeof item === 'object' ? item.value : item;
+        const label = typeof item === 'object' ? item.label : item.toString();
+        const isSelected = value === selectedValue;
+        
+        return (
+          <TouchableOpacity
+            key={index}
+            style={[
+              styles.inlinePickerItem,
+              isSelected && styles.selectedInlinePickerItem,
+            ]}
+            onPress={() => onValueChange(value)}
+          >
+            <Text style={[
+              styles.inlinePickerText,
+              isSelected && styles.selectedInlinePickerText,
+            ]}>
+              {label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </ScrollView>
+  );
+};
+
+
+
 
 export default function DatePicker({
   value,
@@ -23,7 +49,7 @@ export default function DatePicker({
   placeholder = "Select date",
   style,
   disabled = false,
-}: DatePickerProps) {
+}) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDate, setTempDate] = useState(
     value ? new Date(value) : new Date()
@@ -33,7 +59,7 @@ export default function DatePicker({
   const generateYears = () => {
     const currentYear = new Date().getFullYear();
     const years = [];
-    for (let i = currentYear; i <= currentYear + 5; i++) {
+    for (let i = currentYear - 10; i <= currentYear + 10; i++) {
       years.push(i);
     }
     return years;
@@ -56,7 +82,7 @@ export default function DatePicker({
     ];
   };
 
-  const generateDays = (year: number, month: number) => {
+  const generateDays = (year, month) => {
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const days = [];
     for (let i = 1; i <= daysInMonth; i++) {
@@ -65,14 +91,14 @@ export default function DatePicker({
     return days;
   };
 
-  const formatDate = (date: Date) => {
+  const formatDate = (date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
 
-  const formatDisplayDate = (dateString: string) => {
+  const formatDisplayDate = (dateString) => {
     if (!dateString) return placeholder;
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
@@ -131,70 +157,46 @@ export default function DatePicker({
               {/* Year Picker */}
               <View style={styles.pickerColumn}>
                 <Text style={styles.pickerLabel}>Year</Text>
-                <Picker
+                <InlinePicker
+                  items={generateYears()}
                   selectedValue={tempDate.getFullYear()}
-                  style={styles.datePicker}
                   onValueChange={(value) => {
                     const newDate = new Date(tempDate);
                     newDate.setFullYear(value);
                     setTempDate(newDate);
                   }}
-                >
-                  {generateYears().map((year) => (
-                    <Picker.Item
-                      key={year}
-                      label={year.toString()}
-                      value={year}
-                    />
-                  ))}
-                </Picker>
+                />
               </View>
 
               {/* Month Picker */}
               <View style={styles.pickerColumn}>
                 <Text style={styles.pickerLabel}>Month</Text>
-                <Picker
+                <InlinePicker
+                  items={generateMonths()}
                   selectedValue={tempDate.getMonth()}
-                  style={styles.datePicker}
                   onValueChange={(value) => {
                     const newDate = new Date(tempDate);
                     newDate.setMonth(value);
                     setTempDate(newDate);
                   }}
-                >
-                  {generateMonths().map((month) => (
-                    <Picker.Item
-                      key={month.value}
-                      label={month.label}
-                      value={month.value}
-                    />
-                  ))}
-                </Picker>
+                />
               </View>
 
               {/* Day Picker */}
               <View style={styles.pickerColumn}>
                 <Text style={styles.pickerLabel}>Day</Text>
-                <Picker
+                <InlinePicker
+                  items={generateDays(
+                    tempDate.getFullYear(),
+                    tempDate.getMonth()
+                  )}
                   selectedValue={tempDate.getDate()}
-                  style={styles.datePicker}
                   onValueChange={(value) => {
                     const newDate = new Date(tempDate);
                     newDate.setDate(value);
                     setTempDate(newDate);
                   }}
-                >
-                  {generateDays(
-                    tempDate.getFullYear(),
-                    tempDate.getMonth()
-                  ).map((day) => (
-                    <Picker.Item
-                      key={day}
-                      label={day.toString()}
-                      value={day}
-                    />
-                  ))}
-                </Picker>
+                />
               </View>
             </View>
 
@@ -285,6 +287,46 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9fafb",
     borderRadius: 8,
   },
+  // Custom Picker Styles
+  customPickerContainer: {
+    position: "relative",
+    backgroundColor: "#f9fafb",
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  customPicker: {
+    flex: 1,
+  },
+  pickerOverlay: {
+    position: "absolute",
+    top: "40%",
+    left: 0,
+    right: 0,
+    height: 40,
+    backgroundColor: "rgba(124, 58, 237, 0.1)",
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: "#7c3aed",
+    zIndex: 1,
+    pointerEvents: "none",
+  },
+  pickerItem: {
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 8,
+  },
+  pickerItemText: {
+    fontSize: 16,
+    color: "#6b7280",
+    textAlign: "center",
+  },
+  selectedPickerItem: {
+    backgroundColor: "transparent",
+  },
+  selectedPickerItemText: {
+    color: "#7c3aed",
+    fontWeight: "600",
+  },
   modalButtons: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -310,6 +352,32 @@ const styles = StyleSheet.create({
   },
   confirmButtonText: {
     color: "white",
+    fontWeight: "600",
+  },
+  // Inline Picker Styles
+  inlinePickerContainer: {
+    backgroundColor: "#f9fafb",
+    borderRadius: 8,
+    maxHeight: 150,
+    overflow: "hidden",
+  },
+  inlinePickerItem: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+  },
+  inlinePickerText: {
+    fontSize: 14,
+    color: "#1f2937",
+    textAlign: "center",
+  },
+  selectedInlinePickerItem: {
+    backgroundColor: "#ede9fe",
+  },
+  selectedInlinePickerText: {
+    color: "#7c3aed",
     fontWeight: "600",
   },
 });

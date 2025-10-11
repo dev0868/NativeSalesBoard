@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { FormProvider } from 'react-hook-form';
 import SimpleQuotationWrapper from './SimpleQuotationWrapper';
-import BasicDetails from './BasicDetailsNew';
+import BasicDetails from './BasicDetails';
 import CostCalculator from './CostCalculator';
 import HotelsSection from './HotelsSectionNew';
 import InclusionsExclusions from './InclusionsExclusionsNew';

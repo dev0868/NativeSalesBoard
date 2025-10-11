@@ -4,11 +4,8 @@ import { useFormContext, Controller } from 'react-hook-form';
 import { Ionicons } from '@expo/vector-icons';
 import DatePicker from '@/components/ui/DatePicker';
 
-interface BasicDetailsProps {
-  // Add any specific props if needed
-}
 
-const BasicDetails: React.FC<BasicDetailsProps> = () => {
+const BasicDetails = () => {
   const { control, formState: { errors } } = useFormContext();
 
   const FormField = ({ 
@@ -16,11 +13,6 @@ const BasicDetails: React.FC<BasicDetailsProps> = () => {
     children, 
     required = false, 
     error 
-  }: { 
-    label: string; 
-    children: React.ReactNode; 
-    required?: boolean; 
-    error?: any; 
   }) => (
     <View style={{ marginBottom: 24 }}>
       <Text style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}>
@@ -229,19 +221,7 @@ const BasicDetails: React.FC<BasicDetailsProps> = () => {
         </View>
       </View>
 
-      <FormField label="Assign Date" error={errors.AssignDate}>
-        <Controller
-          control={control}
-          name="AssignDate"
-          render={({ field: { onChange, value } }) => (
-            <DatePicker
-              value={value}
-              onChange={onChange}
-              placeholder="Select assign date"
-            />
-          )}
-        />
-      </FormField>
+  
     </View>
   );
 };

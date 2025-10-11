@@ -1,14 +1,21 @@
-// hooks/useQuotationDraft.ts
-import { useEffect, useRef, useState } from 'react';
-import { useForm, UseFormReturn } from 'react-hook-form';
+// hooks/useQuotationDraft.js
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { useForm } from 'react-hook-form';
 import { saveQuotationDraft, loadQuotationDraft } from '@/storage/quotationDrafts';
 
 function useDebounced(fn, delay = 700) {
   const t = useRef(null);
-  return (...args) => {
+  const fnRef = useRef(fn);
+  
+  // Update the ref when fn changes
+  useEffect(() => {
+    fnRef.current = fn;
+  }, [fn]);
+  
+  return useCallback((...args) => {
     if (t.current) clearTimeout(t.current);
-    t.current = setTimeout(() => fn(...args), delay);
-  };
+    t.current = setTimeout(() => fnRef.current(...args), delay);
+  }, [delay]);
 }
 
 /**
@@ -29,9 +36,11 @@ export function useQuotationDraft(
     })();
   }, [tripId]);
 
-  const debounced = useDebounced((values) => {
+  const saveValues = useCallback((values) => {
     if (tripId) saveQuotationDraft(tripId, values);
-  }, 700);
+  }, [tripId]);
+
+  const debounced = useDebounced(saveValues, 700);
 
   useEffect(() => {
     const sub = methods.watch((vals) => debounced(vals));

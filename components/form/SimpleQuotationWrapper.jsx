@@ -5,16 +5,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-type SectionDef = { key: string; Component: React.ComponentType<any> };
+// Remove TypeScript syntax since this is a .jsx file
 
-interface Props {
-  sections: SectionDef[];            // ✅ stable array like [{ key:'basic', Component: BasicDetails }, ...]
-  header?: React.ReactNode;
-  footer?: React.ReactNode;
-  onSubmit?: () => void;             // ✅ call when last step pressed
-}
-
-const SimpleQuotationWrapper: React.FC<Props> = ({
+const SimpleQuotationWrapper = ({
   sections,
   header,
   footer,
@@ -25,7 +18,7 @@ const SimpleQuotationWrapper: React.FC<Props> = ({
   const [currentSection, setCurrentSection] = useState(0);
 
   const goToSection = useCallback(
-    (sectionIndex: number) => {
+    (sectionIndex) => {
       const clamped = Math.max(0, Math.min(sectionIndex, sections.length - 1));
       setCurrentSection(clamped);
     },

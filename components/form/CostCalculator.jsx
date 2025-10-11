@@ -1,13 +1,89 @@
 // components/form/CostCalculatorNew.tsx
-import React, { useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect, useRef, memo } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useFormContext, Controller, useWatch } from 'react-hook-form';
 import { Ionicons } from '@expo/vector-icons';
 
+/** ---------- Small helpers ---------- */
+const num = (v) => {
+  const x = parseFloat(String(v ?? '').trim());
+  return Number.isFinite(x) ? x : 0;
+};
+
+/** ---------- Memo building blocks ---------- */
+const FormField = memo(function FormField({
+  label,
+  children,
+  required = false,
+  error,
+}) {
+  return (
+    <View style={{ marginBottom: 24 }}>
+      <Text style={{ color: '#374151', fontWeight: '600', marginBottom: 8 }}>
+        {label} {required && <Text style={{ color: 'red' }}>*</Text>}
+      </Text>
+      {children}
+      {!!error?.message && (
+        <Text style={{ color: 'red', fontSize: 12, marginTop: 4 }}>{error.message}</Text>
+      )}
+    </View>
+  );
+});
+
+const CheckboxField = memo(function CheckboxField({
+  label,
+  value,
+  onValueChange,
+}) {
+  return (
+    <TouchableOpacity
+      activeOpacity={0.8}
+      style={styles.checkboxContainer}
+      onPress={() => onValueChange(!value)}
+    >
+      <View style={[styles.checkbox, value && styles.checkboxChecked]}>
+        {value && <Ionicons name="checkmark" size={16} color="white" />}
+      </View>
+      <Text style={styles.checkboxLabel}>{label}</Text>
+    </TouchableOpacity>
+  );
+});
+
+/** A memoized RHF numeric input to minimize re-mounts while typing */
+const RHFNumberInput = memo(function RHFNumberInput({
+  name,
+  control,
+  error,
+  placeholder,
+}) {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field: { onChange, value, onBlur } }) => (
+        <TextInput
+          style={[styles.input, error && styles.errorInput]}
+          placeholder={placeholder}
+          keyboardType={Platform.select({ ios: 'numbers-and-punctuation', android: 'numeric' })}
+          value={value == null ? '' : String(value)}
+          onChangeText={onChange}
+          onBlur={onBlur}
+          placeholderTextColor="#9ca3af"
+          // keep focus stable on Android while typing/submitting
+          blurOnSubmit={false}
+          importantForAutofill="no"
+          autoCorrect={false}
+        />
+      )}
+    />
+  );
+});
+
+/** ---------- Main component ---------- */
 const CostCalculator = () => {
   const { control, setValue, getValues, formState: { errors } } = useFormContext();
 
-  // Subscribe once to ALL fields needed for the calculation
+  // Subscribe only to the fields we truly need for total calculation
   const [
     flightCost,
     visaCost,
@@ -35,13 +111,9 @@ const CostCalculator = () => {
     ],
   });
 
-  // Safe number coercion
-  const num = (v) => {
-    const x = parseFloat(String(v ?? '').trim());
-    return Number.isFinite(x) ? x : 0;
-  };
+  // Schedule setValue to next frame to avoid racing the typing render
+  const rafId = useRef(null);
 
-  // Compute total and set only if changed (prevents update-depth loop)
   useEffect(() => {
     const flight = num(flightCost);
     const visa = num(visaCost);
@@ -60,12 +132,19 @@ const CostCalculator = () => {
     const current = String(getValues('TotalCost') ?? '');
 
     if (current !== next) {
-      setValue('TotalCost', next, {
-        shouldDirty: false,
-        shouldTouch: false,
-        shouldValidate: false,
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+      rafId.current = requestAnimationFrame(() => {
+        setValue('TotalCost', next, {
+          shouldDirty: false,
+          shouldTouch: false,
+          shouldValidate: false,
+        });
       });
     }
+
+    return () => {
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+    };
   }, [
     flightCost,
     visaCost,
@@ -81,39 +160,6 @@ const CostCalculator = () => {
     setValue,
   ]);
 
-  const FormField = ({
-    label,
-    children,
-    required = false,
-    error,
-  }
- ) => (
-    <View style={{ marginBottom: 24 }}>
-      <Text style={{ color: '#374151', fontWeight: '600', marginBottom: 8 }}>
-        {label} {required && <Text style={{ color: 'red' }}>*</Text>}
-      </Text>
-      {children}
-      {error && (
-        <Text style={{ color: 'red', fontSize: 12, marginTop: 4 }}>
-          {error.message}
-        </Text>
-      )}
-    </View>
-  );
-
-  const CheckboxField = ({
-    label,
-    value,
-    onValueChange,
-  }) => (
-    <TouchableOpacity style={styles.checkboxContainer} onPress={() => onValueChange(!value)}>
-      <View style={[styles.checkbox, value && styles.checkboxChecked]}>
-        {value && <Ionicons name="checkmark" size={16} color="white" />}
-      </View>
-      <Text style={styles.checkboxLabel}>{label}</Text>
-    </TouchableOpacity>
-  );
-
   return (
     <View style={styles.card}>
       {/* Section Header */}
@@ -127,188 +173,45 @@ const CostCalculator = () => {
       {/* Basic Costs */}
       <Text style={styles.sectionSubtitle}>Package Costs</Text>
 
-      <View style={{ flexDirection: 'row', gap: 12 }}>
-        <View style={{ flex: 1 }}>
-          <FormField label="Flight Cost (₹)" error={errors.FlightCost}>
-            <Controller
-              control={control}
+      {/* Avoid RN 'gap' to prevent layout thrash on some versions */}
+      <View style={{ flexDirection: 'row' }}>
+        <View style={{ flex: 1, marginRight: 12 }}>
+          <FormField label="Flight Cost (₹)" error={errors?.FlightCost}>
+            <RHFNumberInput
               name="FlightCost"
-              render={({ field: { onChange, value, onBlur } }) => (
-                <TextInput
-                  style={[styles.input, errors.FlightCost && styles.errorInput]}
-                  placeholder="Enter flight cost"
-                  keyboardType="numeric"
-                  value={value == null ? '' : String(value)}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  placeholderTextColor="#9ca3af"
-                />
-              )}
+              control={control}
+              error={errors?.FlightCost}
+              placeholder="Enter flight cost"
             />
           </FormField>
         </View>
+
         <View style={{ flex: 1 }}>
-          <FormField label="Visa Cost (₹)" error={errors.VisaCost}>
-            <Controller
-              control={control}
+          <FormField label="Visa Cost (₹)" error={errors?.VisaCost}>
+            <RHFNumberInput
               name="VisaCost"
-              render={({ field: { onChange, value, onBlur } }) => (
-                <TextInput
-                  style={[styles.input, errors.VisaCost && styles.errorInput]}
-                  placeholder="Enter visa cost"
-                  keyboardType="numeric"
-                  value={value == null ? '' : String(value)}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  placeholderTextColor="#9ca3af"
-                />
-              )}
+              control={control}
+              error={errors?.VisaCost}
+              placeholder="Enter visa cost"
             />
           </FormField>
         </View>
       </View>
 
-      <FormField label="Land Package Cost (₹)" error={errors.LandPackageCost}>
-        <Controller
-          control={control}
+      <FormField label="Land Package Cost (₹)" error={errors?.LandPackageCost}>
+        <RHFNumberInput
           name="LandPackageCost"
-          render={({ field: { onChange, value, onBlur } }) => (
-            <TextInput
-              style={[styles.input, errors.LandPackageCost && styles.errorInput]}
-              placeholder="Enter land package cost"
-              keyboardType="numeric"
-              value={value == null ? '' : String(value)}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              placeholderTextColor="#9ca3af"
-            />
-          )}
-        />
-      </FormField>
-
-      <FormField label="Total Tax (₹)" error={errors.TotalTax}>
-        <Controller
           control={control}
-          name="TotalTax"
-          render={({ field: { onChange, value, onBlur } }) => (
-            <TextInput
-              style={[styles.input, errors.TotalTax && styles.errorInput]}
-              placeholder="Enter total tax"
-              keyboardType="numeric"
-              value={value == null ? '' : String(value)}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              placeholderTextColor="#9ca3af"
-            />
-          )}
+          error={errors?.LandPackageCost}
+          placeholder="Enter land package cost"
         />
       </FormField>
 
-      {/* GST & TCS */}
-      <Text style={styles.sectionSubtitle}>GST & TCS</Text>
+    
 
-      <Controller
-        control={control}
-        name="PackageWithGST"
-        render={({ field: { onChange, value } }) => (
-          <CheckboxField label="Package includes GST" value={!!value} onValueChange={onChange} />
-        )}
-      />
+ 
 
-      {packageWithGST ? (
-        <View style={{ flexDirection: 'row', gap: 12 }}>
-          <View style={{ flex: 1 }}>
-            <FormField label="GST Amount (₹)" error={errors.GST}>
-              <Controller
-                control={control}
-                name="GST"
-                render={({ field: { onChange, value, onBlur } }) => (
-                  <TextInput
-                    style={[styles.input, errors.GST && styles.errorInput]}
-                    placeholder="Enter GST amount"
-                    keyboardType="numeric"
-                    value={value == null ? '' : String(value)}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    placeholderTextColor="#9ca3af"
-                  />
-                )}
-              />
-            </FormField>
-          </View>
-          <View style={{ flex: 1 }}>
-            <FormField label="GST Waived Off (₹)" error={errors.GstWaivedOffAmt}>
-              <Controller
-                control={control}
-                name="GstWaivedOffAmt"
-                render={({ field: { onChange, value, onBlur } }) => (
-                  <TextInput
-                    style={[styles.input, errors.GstWaivedOffAmt && styles.errorInput]}
-                    placeholder="Waived amount"
-                    keyboardType="numeric"
-                    value={value == null ? '' : String(value)}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    placeholderTextColor="#9ca3af"
-                  />
-                )}
-              />
-            </FormField>
-          </View>
-        </View>
-      ) : null}
-
-      <Controller
-        control={control}
-        name="PackageWithTCS"
-        render={({ field: { onChange, value } }) => (
-          <CheckboxField label="Package includes TCS" value={!!value} onValueChange={onChange} />
-        )}
-      />
-
-      {packageWithTCS ? (
-        <View style={{ flexDirection: 'row', gap: 12 }}>
-          <View style={{ flex: 1 }}>
-            <FormField label="TCS Amount (₹)" error={errors.TCS}>
-              <Controller
-                control={control}
-                name="TCS"
-                render={({ field: { onChange, value, onBlur } }) => (
-                  <TextInput
-                    style={[styles.input, errors.TCS && styles.errorInput]}
-                    placeholder="Enter TCS amount"
-                    keyboardType="numeric"
-                    value={value == null ? '' : String(value)}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    placeholderTextColor="#9ca3af"
-                  />
-                )}
-              />
-            </FormField>
-          </View>
-          <View style={{ flex: 1 }}>
-            <FormField label="TCS Waived Off (₹)" error={errors.TcsWaivedOffAmt}>
-              <Controller
-                control={control}
-                name="TcsWaivedOffAmt"
-                render={({ field: { onChange, value, onBlur } }) => (
-                  <TextInput
-                    style={[styles.input, errors.TcsWaivedOffAmt && styles.errorInput]}
-                    placeholder="Waived amount"
-                    keyboardType="numeric"
-                    value={value == null ? '' : String(value)}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    placeholderTextColor="#9ca3af"
-                  />
-                )}
-              />
-            </FormField>
-          </View>
-        </View>
-      ) : null}
-
+    
       {/* Total Cost Display */}
       <View style={styles.totalContainer}>
         <Text style={styles.totalLabel}>Total Package Cost</Text>
@@ -317,9 +220,7 @@ const CostCalculator = () => {
           name="TotalCost"
           render={({ field: { value } }) => {
             const numVal = Number.parseFloat(String(value ?? '0'));
-            const display = Number.isFinite(numVal)
-              ? numVal.toLocaleString('en-IN')
-              : '0';
+            const display = Number.isFinite(numVal) ? numVal.toLocaleString('en-IN') : '0';
             return <Text style={styles.totalAmount}>₹{display}</Text>;
           }}
         />

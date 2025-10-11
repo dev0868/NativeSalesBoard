@@ -6,7 +6,7 @@ import BasicDetails from './BasicDetails';
 import CostCalculator from './CostCalculator';
 import HotelsSection from './HotelsSection';
 import InclusionsExclusions from './InclusionsExclusionsNew';
-import FlightSection from './FlightSectionNew';
+import FlightSection from './FlightSection';
 import ItinerarySection from './ItinerarySectionNew';
 
 import { useQuotationDraft } from '@/hooks/useQuotationDraft'; // your AsyncStorage autosave hook

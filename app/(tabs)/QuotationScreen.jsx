@@ -15,9 +15,9 @@ const QuotationScreen = () => {
     // await api.createQuotation(data.TripId, data);
 
     await clearQuotationDraft(data.TripId); // ✅ remove local draft
-    Alert.alert('Success', 'Quotation created successfully!', [
-      { text: 'OK', onPress: () => router.back() },
-    ]);
+    // Alert.alert('Success', 'Quotation created successfully!', [
+    //   { text: 'OK', onPress: () => router.back() },
+    // ]);
   };
 
   return (

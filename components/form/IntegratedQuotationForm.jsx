@@ -12,7 +12,7 @@ import ItinerarySection from './ItinerarySectionNew';
 import { useQuotationDraft } from '@/hooks/useQuotationDraft'; // your AsyncStorage autosave hook
 import { clearQuotationDraft } from '@/storage/quotationDrafts';
 
-const calculateTravelEndDate = (startDate: string, days: number) => {
+const calculateTravelEndDate = (startDate, days) => {
   if (!startDate || !days) return '';
   const start = new Date(startDate);
   const end = new Date(start.getTime() + (days - 1) * 24 * 60 * 60 * 1000);
@@ -20,8 +20,9 @@ const calculateTravelEndDate = (startDate: string, days: number) => {
 };
 
 const IntegratedQuotationForm = ({ onSubmit, initialData = {}, lead }) => {
-  const tripId = lead?.TripId || '';
 
+  const tripId = lead?.TripId || '';
+console.log(tripId)
   // Build defaults ONCE; changing this object each render causes RHF to rethink everything.
   const defaults = useMemo(
     () => ({
@@ -104,6 +105,7 @@ const IntegratedQuotationForm = ({ onSubmit, initialData = {}, lead }) => {
   );
 
   const handleSubmit = methods.handleSubmit(async (data) => {
+    console.log(data)
     await onSubmit(data);
     await clearQuotationDraft(tripId); // clear draft only on success
   });

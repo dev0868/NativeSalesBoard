@@ -22,14 +22,20 @@ const calculateTravelEndDate = (startDate, days) => {
 const IntegratedQuotationForm = ({ onSubmit, initialData = {}, lead }) => {
 
   const tripId = lead?.TripId || '';
-console.log(tripId)
+const userData={
+  CompanyId:'12345',
+  AssignDate: new Date().toISOString(),
+  AssignDateKey: +new Date().toISOString().slice(0,10).replace(/-/g,''),
+
+
+}
   // Build defaults ONCE; changing this object each render causes RHF to rethink everything.
   const defaults = useMemo(
     () => ({
       TripId: tripId,
-      FullName: lead?.ClientLeadDetails?.FullName || '',
+      "Client-Name": lead?.ClientLeadDetails?.FullName || '',
       Contact: lead?.ClientLeadDetails?.Contact || '',
-      Email: lead?.ClientLeadDetails?.Email || '',
+      "Client-Email": lead?.ClientLeadDetails?.Email || '',
       TravelDate: lead?.ClientLeadDetails?.TravelDate || '',
       AssignDate: lead?.AssignDate || '',
       NoOfPax: lead?.ClientLeadDetails?.Pax || '',
@@ -106,7 +112,8 @@ console.log(tripId)
 
   const handleSubmit = methods.handleSubmit(async (data) => {
     console.log(data)
-    await onSubmit(data);
+
+    await onSubmit({...data,...userData});
     await clearQuotationDraft(tripId); // clear draft only on success
   });
 

@@ -1,9 +1,9 @@
-// Debounced autosave hook (tailored for Quoation form)
-import { useEffect, useMemo, useRef } from 'react';
+// hooks/useQuotationDraft.ts
+import { useEffect, useRef, useState } from 'react';
 import { useForm, UseFormReturn } from 'react-hook-form';
-import { loadQuotationDraft, saveQuotationDraft } from '@/storage/quotationDrafts';
+import { saveQuotationDraft, loadQuotationDraft } from '@/storage/quotationDrafts';
 
-export function useDebounced(fn, delay = 700) {
+function useDebounced(fn, delay = 700) {
   const t = useRef(null);
   return (...args) => {
     if (t.current) clearTimeout(t.current);
@@ -11,17 +11,24 @@ export function useDebounced(fn, delay = 700) {
   };
 }
 
-export function useQuotationDraft(tripId, defaults) {
-  // load saved draft (if any)
-  const savedQuotes = useMemo(() => (tripId ? loadQuotationDraft(tripId) : null), [tripId]);
+/**
+ * Handles RHF initialization + async draft load + debounced autosave
+ */
+export function useQuotationDraft(
+  tripId,
+  defaults,
+) {
+  const [loading, setLoading] = useState(true);
+  const methods = useForm({ defaultValues: defaults, mode: 'onChange' });
 
-  // RHF with rehydrated default values (saved overrides api defaults)
-  const methods = useForm({
-    defaultValues: { ...(defaults), ...(savedQuotes ?? {}) },
-    mode: 'onChange',
-  });
+  useEffect(() => {
+    (async () => {
+      const saved = tripId ? await loadQuotationDraft(tripId) : null;
+      if (saved) methods.reset({ ...(defaults), ...(saved) });
+      setLoading(false);
+    })();
+  }, [tripId]);
 
-  // autosave on any change (debounced)
   const debounced = useDebounced((values) => {
     if (tripId) saveQuotationDraft(tripId, values);
   }, 700);
@@ -31,5 +38,5 @@ export function useQuotationDraft(tripId, defaults) {
     return () => sub.unsubscribe();
   }, [methods.watch, debounced]);
 
-  return methods;
+  return { methods, loading };
 }

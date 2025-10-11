@@ -12,13 +12,9 @@ const QuotationScreen = () => {
 
   const handleFormSubmit = async (data) => {
     console.log('Quotation Form Submitted:', data);
-
-    // TODO: call your create-quotation API here
     // await api.createQuotation(data.TripId, data);
 
-    // ✅ clear local draft after successful creation
-    clearQuotationDraft(data.TripId);
-
+    await clearQuotationDraft(data.TripId); // ✅ remove local draft
     Alert.alert('Success', 'Quotation created successfully!', [
       { text: 'OK', onPress: () => router.back() },
     ]);

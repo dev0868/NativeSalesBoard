@@ -5,31 +5,50 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+type SectionDef = { key: string; Component: React.ComponentType<any> };
 
-const SimpleQuotationWrapper = ({ 
-  sections, 
-  value, 
-  onChange, 
-  header, 
-  footer 
+interface Props {
+  sections: SectionDef[];            // ✅ stable array like [{ key:'basic', Component: BasicDetails }, ...]
+  header?: React.ReactNode;
+  footer?: React.ReactNode;
+  onSubmit?: () => void;             // ✅ call when last step pressed
+}
+
+const SimpleQuotationWrapper: React.FC<Props> = ({
+  sections,
+  header,
+  footer,
+  onSubmit,
 }) => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [currentSection, setCurrentSection] = useState(0);
 
-  const goToSection = useCallback((sectionIndex) => {
-    const clamped = Math.max(0, Math.min(sectionIndex, sections.length - 1));
-    setCurrentSection(clamped);
-  }, [sections.length]);
+  const goToSection = useCallback(
+    (sectionIndex: number) => {
+      const clamped = Math.max(0, Math.min(sectionIndex, sections.length - 1));
+      setCurrentSection(clamped);
+    },
+    [sections.length]
+  );
 
-  // Render only the current section
-  const CurrentSection = sections[currentSection];
+  // Render only the current section, but keep identity via { key, Component }
+  const { Component } = sections[currentSection];
+
+  const handlePrimary = useCallback(() => {
+    const isLast = currentSection === sections.length - 1;
+    if (isLast) {
+      onSubmit?.();                   // ✅ submit when on last
+    } else {
+      goToSection(currentSection + 1);
+    }
+  }, [currentSection, sections.length, goToSection, onSubmit]);
 
   return (
     <View style={{ flex: 1, backgroundColor: '#7c3aed' }}>
       {/* Header */}
       <LinearGradient
-        colors={['#7c3aed', '#5b21b6']} 
+        colors={['#7c3aed', '#5b21b6']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{
@@ -40,12 +59,14 @@ const SimpleQuotationWrapper = ({
           borderBottomRightRadius: 24,
         }}
       >
-        <View style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 16,
-        }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 16,
+          }}
+        >
           <TouchableOpacity
             onPress={() => router.back()}
             style={{
@@ -69,34 +90,30 @@ const SimpleQuotationWrapper = ({
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={{ flex: 1 }}
         >
-         
-          {/* Section Content */}
-          <ScrollView 
+          <ScrollView
             style={{ flex: 1 }}
             contentContainerStyle={{ padding: 0, flexGrow: 1 }}
             showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
+            keyboardShouldPersistTaps="handled"   // ✅ keeps keyboard while tapping inside
           >
             {header}
             <View style={{ flex: 1 }}>
-              <CurrentSection
-                value={value}
-                onChange={onChange}
-                goNext={() => goToSection(currentSection + 1)}
-                goPrev={() => goToSection(currentSection - 1)}
-              />
+              {/* 🚫 no value / onChange props; sections read/write via RHF context */}
+              <Component />
             </View>
           </ScrollView>
 
           {/* Bottom Navigation */}
-          <View style={{ 
-            flexDirection: 'row', 
-            justifyContent: 'space-between', 
-            padding: 16,
-            backgroundColor: 'white',
-            borderTopWidth: 1,
-            borderTopColor: '#f3f4f6'
-          }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              padding: 16,
+              backgroundColor: 'white',
+              borderTopWidth: 1,
+              borderTopColor: '#f3f4f6',
+            }}
+          >
             <TouchableOpacity
               onPress={() => goToSection(currentSection - 1)}
               disabled={currentSection === 0}
@@ -107,17 +124,17 @@ const SimpleQuotationWrapper = ({
                 paddingHorizontal: 24,
                 borderRadius: 12,
                 minWidth: 100,
-                alignItems: 'center'
+                alignItems: 'center',
               }}
             >
               <Text style={{ color: '#374151', fontWeight: '600', fontSize: 16 }}>
                 Previous
               </Text>
             </TouchableOpacity>
-            
+
+              {/* Primary button now submits on last step */}
             <TouchableOpacity
-              onPress={() => goToSection(currentSection + 1)}
-              disabled={currentSection === sections.length - 1}
+              onPress={handlePrimary}
               style={{
                 backgroundColor: '#7c3aed',
                 paddingVertical: 14,
@@ -129,7 +146,7 @@ const SimpleQuotationWrapper = ({
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.2,
                 shadowRadius: 4,
-                elevation: 3
+                elevation: 3,
               }}
             >
               <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
@@ -138,23 +155,21 @@ const SimpleQuotationWrapper = ({
             </TouchableOpacity>
           </View>
 
-          {footer && (
-            <View style={{ padding: 16, paddingTop: 0 }}>
-              {footer}
-            </View>
-          )}
+          {footer && <View style={{ padding: 16, paddingTop: 0 }}>{footer}</View>}
         </KeyboardAvoidingView>
       </View>
 
       {/* Right Sidebar Navigation */}
-      <View style={{
-        position: 'absolute',
-        right: 16,
-        top: '50%',
-        transform: [{ translateY: -((sections.length * 12 + 80) / 2) }],
-        alignItems: 'center',
-      }}>
-        {/* Up Button */}
+      <View
+        style={{
+          position: 'absolute',
+          right: 16,
+          top: '50%',
+          transform: [{ translateY: -((sections.length * 12 + 80) / 2) }],
+          alignItems: 'center',
+        }}
+      >
+        {/* Up */}
         <TouchableOpacity
           onPress={() => goToSection(currentSection - 1)}
           disabled={currentSection === 0}
@@ -173,18 +188,18 @@ const SimpleQuotationWrapper = ({
             elevation: 3,
           }}
         >
-          <Ionicons 
-            name="chevron-up" 
-            size={20} 
-            color={currentSection === 0 ? '#9ca3af' : 'white'} 
+          <Ionicons
+            name="chevron-up"
+            size={20}
+            color={currentSection === 0 ? '#9ca3af' : 'white'}
           />
         </TouchableOpacity>
 
-        {/* Section Indicators */}
+        {/* Dots */}
         <View style={{ alignItems: 'center', marginVertical: 8 }}>
-          {sections.map((_, i) => (
+          {sections.map((s, i) => (
             <TouchableOpacity
-              key={i}
+              key={s.key}                 // ✅ stable key per section
               onPress={() => goToSection(i)}
               style={{
                 width: 12,
@@ -202,7 +217,7 @@ const SimpleQuotationWrapper = ({
           ))}
         </View>
 
-        {/* Down Button */}
+        {/* Down */}
         <TouchableOpacity
           onPress={() => goToSection(currentSection + 1)}
           disabled={currentSection === sections.length - 1}
@@ -210,7 +225,8 @@ const SimpleQuotationWrapper = ({
             width: 40,
             height: 40,
             borderRadius: 20,
-            backgroundColor: currentSection === sections.length - 1 ? '#d1d5db' : '#7c3aed',
+            backgroundColor:
+              currentSection === sections.length - 1 ? '#d1d5db' : '#7c3aed',
             justifyContent: 'center',
             alignItems: 'center',
             marginTop: 8,
@@ -221,28 +237,26 @@ const SimpleQuotationWrapper = ({
             elevation: 3,
           }}
         >
-          <Ionicons 
-            name="chevron-down" 
-            size={20} 
-            color={currentSection === sections.length - 1 ? '#9ca3af' : 'white'} 
+          <Ionicons
+            name="chevron-down"
+            size={20}
+            color={currentSection === sections.length - 1 ? '#9ca3af' : 'white'}
           />
         </TouchableOpacity>
 
-        {/* Section Counter */}
-        <View style={{
-          marginTop: 12,
-          backgroundColor: 'rgba(124, 58, 237, 0.1)',
-          paddingHorizontal: 8,
-          paddingVertical: 4,
-          borderRadius: 12,
-          borderWidth: 1,
-          borderColor: '#7c3aed',
-        }}>
-          <Text style={{
-            fontSize: 10,
-            color: '#7c3aed',
-            fontWeight: '600',
-          }}>
+        {/* Counter */}
+        <View
+          style={{
+            marginTop: 12,
+            backgroundColor: 'rgba(124, 58, 237, 0.1)',
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: '#7c3aed',
+          }}
+        >
+          <Text style={{ fontSize: 10, color: '#7c3aed', fontWeight: '600' }}>
             {currentSection + 1}/{sections.length}
           </Text>
         </View>

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useFormContext, Controller, useFieldArray } from 'react-hook-form';
 import { Ionicons } from '@expo/vector-icons';
+import DatePicker from '@/components/ui/DatePicker';
 
 const HotelsSection = () => {
   const { control, formState: { errors } } = useFormContext();
@@ -180,12 +181,11 @@ const HotelsSection = () => {
                   control={control}
                   name={`Hotels.${index}.checkInDate`}
                   render={({ field: { onChange, value } }) => (
-                    <TextInput
-                      style={styles.input}
-                      placeholder="DD/MM/YYYY"
+                    <DatePicker
                       value={value}
-                      onChangeText={onChange}
-                      placeholderTextColor="#9ca3af"
+                      onDateChange={onChange}
+                      placeholder="Select check-in date"
+                      style={styles.datePickerStyle}
                     />
                   )}
                 />
@@ -197,12 +197,11 @@ const HotelsSection = () => {
                   control={control}
                   name={`Hotels.${index}.checkOutDate`}
                   render={({ field: { onChange, value } }) => (
-                    <TextInput
-                      style={styles.input}
-                      placeholder="DD/MM/YYYY"
+                    <DatePicker
                       value={value}
-                      onChangeText={onChange}
-                      placeholderTextColor="#9ca3af"
+                      onDateChange={onChange}
+                      placeholder="Select check-out date"
+                      style={styles.datePickerStyle}
                     />
                   )}
                 />
@@ -327,6 +326,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#7c3aed',
+  },
+  datePickerStyle: {
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: "white",
   },
 });
 

@@ -8,90 +8,20 @@ import InclusionsExclusions from './InclusionsExclusionsNew';
 import FlightSection from './FlightSectionNew';
 import ItinerarySection from './ItinerarySectionNew';
 
-interface QuotationFormData {
-  TripId: string;
-  FullName: string;
-  Contact: string;
-  Email: string;
-  TravelDate: string;
-  AssignDate: string;
-  NoOfPax: string;
-  Child: string;
-  Infant: string;
-  Budget: string;
-  Departure: string;
-  DestinationName: string;
-  Days: number;
-  Nights: number;
-  PriceType: string;
-  CurrencyType: string;
-  FlightCost: string;
-  VisaCost: string;
-  LandPackageCost: string;
-  TotalTax: string;
-  TotalCost: string;
-  GST: string;
-  TCS: string;
-  GstWaivedOffAmt: string;
-  TcsWaivedOffAmt: string;
-  GstamountWaivedoffOtp: string;
-  PackageWithGST: boolean;
-  PackageWithTCS: boolean;
-  TcsamountWaivedoffOtp: string;
-  TcsFlag: boolean;
-  GstFlag: boolean;
-  Hotels: HotelData[];
-  Inclusions: string[];
-  OtherInclusions: string;
-  Exclusions: string[];
-  OtherExclusions: string;
-  Itinearies: ItineraryData[];
-  flightsImagesLinks: string[];
-  InclusionsImagesLinks: string[];
-  travel_data: any;
-  TravelEndDate: string;
-}
 
-interface HotelData {
-  nights: string[];
-  name: string;
-  city: string;
-  roomType: string;
-  category: string;
-  meals: string[];
-  checkInDate: string;
-  checkOutDate: string;
-  comments: string;
-}
-
-interface ItineraryData {
-  day: number;
-  title: string;
-  description: string;
-  activities: string[];
-  meals: string[];
-  accommodation: string;
-}
-
-interface IntegratedQuotationFormProps {
-  onSubmit: (data: QuotationFormData) => void;
-  initialData?: Partial<QuotationFormData>;
-  lead?: any;
-}
-
-const calculateTravelEndDate = (startDate: string, days: number): string => {
+const calculateTravelEndDate = (startDate, days) => {
   if (!startDate || !days) return '';
   const start = new Date(startDate);
   const end = new Date(start.getTime() + (days - 1) * 24 * 60 * 60 * 1000);
   return end.toISOString().split('T')[0];
 };
 
-const IntegratedQuotationForm: React.FC<IntegratedQuotationFormProps> = ({
+const IntegratedQuotationForm = ({
   onSubmit,
   initialData = {},
   lead
 }) => {
-  const methods = useForm<QuotationFormData>({
+  const methods = useForm({
     defaultValues: {
       TripId: lead?.TripId || '',
       FullName: lead?.ClientLeadDetails?.FullName || '',
@@ -154,12 +84,12 @@ const IntegratedQuotationForm: React.FC<IntegratedQuotationFormProps> = ({
   const { handleSubmit, watch } = methods;
 
   // Create section components that work with the wrapper
-  const BasicDetailsSection = ({ value, onChange }: { value: any; onChange: any }) => <BasicDetails />;
-  const CostCalculatorSection = ({ value, onChange }: { value: any; onChange: any }) => <CostCalculator />;
-  const HotelsSectionWrapper = ({ value, onChange }: { value: any; onChange: any }) => <HotelsSection />;
-  const InclusionsExclusionsSection = ({ value, onChange }: { value: any; onChange: any }) => <InclusionsExclusions />;
-  const FlightSectionWrapper = ({ value, onChange }: { value: any; onChange: any }) => <FlightSection />;
-  const ItinerarySectionWrapper = ({ value, onChange }: { value: any; onChange: any }) => <ItinerarySection />;
+  const BasicDetailsSection = ({ value, onChange }) => <BasicDetails />;
+  const CostCalculatorSection = ({ value, onChange }) => <CostCalculator />;
+  const HotelsSectionWrapper = ({ value, onChange }) => <HotelsSection />;
+  const InclusionsExclusionsSection = ({ value, onChange}) => <InclusionsExclusions />;
+  const FlightSectionWrapper = ({ value, onChange }) => <FlightSection />;
+  const ItinerarySectionWrapper = ({ value, onChange }) => <ItinerarySection />;
 
   // Define sections for the wrapper
   const sections = [
@@ -171,15 +101,15 @@ const IntegratedQuotationForm: React.FC<IntegratedQuotationFormProps> = ({
     ItinerarySectionWrapper,
   ];
 
-  const onFormSubmit = (data: QuotationFormData) => {
+  const onFormSubmit = (data) => {
     onSubmit(data);
   };
 
   // Watch all form values to pass to wrapper
   const formValues = watch();
 
-  const handleFormChange = (field: string, value: any) => {
-    methods.setValue(field as keyof QuotationFormData, value);
+  const handleFormChange = (field, value) => {
+    methods.setValue(field , value);
   };
 
   return (

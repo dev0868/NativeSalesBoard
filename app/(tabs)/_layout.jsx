@@ -78,7 +78,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="QuotationScreen"
         options={{
-          href: null, // This hides it from the tab bar but keeps it accessible
+          href: null, 
           title: "Create Quotation",
         }}
       />

@@ -118,7 +118,7 @@ const BasicDetails = () => {
           render={({ field: { onChange, value } }) => (
             <DatePicker
               value={value}
-              onChange={onChange}
+              onDateChange={onChange}
               placeholder="Select travel date"
             />
           )}

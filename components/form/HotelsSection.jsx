@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import { useFormContext, Controller, useFieldArray } from 'react-hook-form';
 import { Ionicons } from '@expo/vector-icons';
 
-const HotelsSection: React.FC = () => {
+const HotelsSection = () => {
   const { control, formState: { errors } } = useFormContext();
   
   const { fields, append, remove } = useFieldArray({
@@ -25,7 +25,7 @@ const HotelsSection: React.FC = () => {
     });
   };
 
-  const removeHotel = (index: number) => {
+  const removeHotel = (index) => {
     if (fields.length > 1) {
       remove(index);
     }
@@ -36,11 +36,6 @@ const HotelsSection: React.FC = () => {
     children, 
     required = false, 
     error 
-  }: { 
-    label: string; 
-    children: React.ReactNode; 
-    required?: boolean; 
-    error?: any; 
   }) => (
     <View style={{ marginBottom: 24 }}>
       <Text style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}>
@@ -55,7 +50,6 @@ const HotelsSection: React.FC = () => {
     </View>
   );
 
-  // Initialize with one hotel if empty
   React.useEffect(() => {
     if (fields.length === 0) {
       addHotel();
@@ -64,7 +58,6 @@ const HotelsSection: React.FC = () => {
 
   return (
     <View style={styles.card}>
-      {/* Section Header */}
       <View style={styles.sectionHeader}>
         <View style={[styles.iconWrapper, { backgroundColor: "#fef3c7" }]}>
           <Ionicons name="bed" size={20} color="#f59e0b" />

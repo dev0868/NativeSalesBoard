@@ -4,7 +4,7 @@ import { FormProvider } from 'react-hook-form';
 import SimpleQuotationWrapper from './SimpleQuotationWrapper';
 import BasicDetails from './BasicDetails';
 import CostCalculator from './CostCalculator';
-import HotelsSection from './HotelsSectionNew';
+import HotelsSection from './HotelsSection';
 import InclusionsExclusions from './InclusionsExclusionsNew';
 import FlightSection from './FlightSectionNew';
 import ItinerarySection from './ItinerarySectionNew';

@@ -109,7 +109,9 @@ export default function DatePicker({
   };
 
   const handleConfirm = () => {
+    console.log('it runs')
     const formatted = formatDate(tempDate);
+    console.log(formatted);
     onDateChange(formatted);
     setShowDatePicker(false);
   };
@@ -170,7 +172,7 @@ export default function DatePicker({
 
               {/* Month Picker */}
               <View style={styles.pickerColumn}>
-                <Text style={styles.pickerLabel}>Month</Text>
+                <Text style={styles.pickerLabel}>Months</Text>
                 <InlinePicker
                   items={generateMonths()}
                   selectedValue={tempDate.getMonth()}

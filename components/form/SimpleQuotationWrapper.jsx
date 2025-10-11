@@ -5,7 +5,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Remove TypeScript syntax since this is a .jsx file
 
 const SimpleQuotationWrapper = ({
   sections,
@@ -25,13 +24,12 @@ const SimpleQuotationWrapper = ({
     [sections.length]
   );
 
-  // Render only the current section, but keep identity via { key, Component }
   const { Component } = sections[currentSection];
 
   const handlePrimary = useCallback(() => {
     const isLast = currentSection === sections.length - 1;
     if (isLast) {
-      onSubmit?.();                   // ✅ submit when on last
+      onSubmit?.();                   
     } else {
       goToSection(currentSection + 1);
     }

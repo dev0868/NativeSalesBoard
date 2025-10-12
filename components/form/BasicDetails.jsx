@@ -1,12 +1,50 @@
-import React from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, StyleSheet, Switch } from 'react-native';
 import { useFormContext, Controller } from 'react-hook-form';
 import { Ionicons } from '@expo/vector-icons';
 import DatePicker from '@/components/ui/DatePicker';
+import CustomPicker from '@/components/ui/CustomPicker';
+import MultiSelectDestinations from '@/components/ui/MultiSelectDestinations';
 
+
+const DestinationList = [
+  "Bali",
+  "Maldives", 
+  "Dubai",
+  "Thailand",
+  "Singapore",
+  "Japan",
+  "Europe",
+  "Switzerland",
+  "Paris",
+  "London",
+  "Vietnam",
+  "Malaysia",
+  "Indonesia",
+  "Philippines",
+  "South Korea",
+  "Nepal",
+  "Bhutan",
+  "Sri Lanka"
+];
+
+const DepartureCityList = [
+  "Mumbai",
+  "Delhi",
+  "Bangalore",
+  "Chennai",
+  "Kolkata",
+  "Hyderabad",
+  "Pune",
+  "Ahmedabad",
+  "Kochi",
+  "Goa"
+];
 
 const BasicDetails = () => {
-  const { control, formState: { errors } } = useFormContext();
+  const { control, formState: { errors }, watch, setValue } = useFormContext();
+  const [selectedDestinations, setSelectedDestinations] = useState([]);
+  const isMultiDestination = watch('IsMultiDestination', false);
 
   const FormField = ({ 
     label, 
@@ -221,7 +259,86 @@ const BasicDetails = () => {
         </View>
       </View>
 
-  
+      {/* Destination Section */}
+      <FormField label="Multi-Destination Trip" error={errors.IsMultiDestination}>
+        <Controller
+          control={control}
+          name="IsMultiDestination"
+          render={({ field: { onChange, value } }) => (
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8 }}>
+              <Text style={{ color: '#374151', fontSize: 16 }}>Enable multiple destinations</Text>
+              <Switch
+                value={value || false}
+                onValueChange={(newValue) => {
+                  onChange(newValue);
+                  if (!newValue) {
+                    setSelectedDestinations([]);
+                    setValue('Destinations', []);
+                  }
+                }}
+                trackColor={{ false: '#e5e7eb', true: '#c084fc' }}
+                thumbColor={value ? '#7c3aed' : '#9ca3af'}
+              />
+            </View>
+          )}
+        />
+      </FormField>
+
+      <FormField label="Departure City" required error={errors.DepartureCity}>
+        <Controller
+          control={control}
+          name="DepartureCity"
+          rules={{ required: "Departure city is required" }}
+          render={({ field: { onChange, value } }) => (
+            <TextInput
+            style={[styles.input, errors.FullName && styles.errorInput]}
+            placeholder="Enter customer full name"
+            value={value}
+            onChangeText={onChange}
+            placeholderTextColor="#9ca3af"
+          />
+          )}
+        />
+      </FormField>
+
+      {!isMultiDestination ? (
+        <FormField label="Destination" required error={errors.DestinationName}>
+          <Controller
+            control={control}
+            name="DestinationName"
+            rules={{ required: "Destination is required" }}
+            render={({ field: { onChange, value } }) => (
+              <CustomPicker
+                items={DestinationList}
+                selectedValue={value}
+                onValueChange={(selectedValue) => {
+                  onChange(selectedValue);
+                  setValue('Destinations', [selectedValue]);
+                }}
+                placeholder="Select destination"
+                title="Select Destination"
+              />
+            )}
+          />
+        </FormField>
+      ) : (
+        <FormField 
+          label="Destinations" 
+          required 
+          error={selectedDestinations.length === 0 ? { message: "At least one destination is required" } : undefined}
+        >
+          <MultiSelectDestinations
+            destinations={DestinationList}
+            selectedDestinations={selectedDestinations}
+            onSelectionChange={(destinations) => {
+              setSelectedDestinations(destinations);
+              setValue('Destinations', destinations);
+            }}
+            placeholder="Select multiple destinations"
+          />
+        </FormField>
+      )}
+
     </View>
   );
 };

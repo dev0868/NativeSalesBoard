@@ -34,44 +34,52 @@ const userData={
     () => ({
       TripId: tripId,
       "Client-Name": lead?.ClientLeadDetails?.FullName || '',
-      Contact: lead?.ClientLeadDetails?.Contact || '',
+      "Client-Contact": lead?.ClientLeadDetails?.Contact || '',
       "Client-Email": lead?.ClientLeadDetails?.Email || '',
       TravelDate: lead?.ClientLeadDetails?.TravelDate || '',
+      TravelDateKey: +new Date(lead?.ClientLeadDetails?.TravelDate).toISOString().slice(0,10).replace(/-/g,''),
       AssignDate: lead?.AssignDate || '',
       NoOfPax: lead?.ClientLeadDetails?.Pax || '',
       Child: lead?.ClientLeadDetails?.Child || '',
       Infant: lead?.ClientLeadDetails?.Infant || '0',
       Budget: lead?.ClientLeadDetails?.Budget || '',
-      Departure: lead?.ClientLeadDetails?.DepartureCity || '',
+      DepartureCity: lead?.ClientLeadDetails?.DepartureCity || '',
       DestinationName: lead?.ClientLeadDetails?.DestinationName || '',
+      IsMultiDestination: false,
+      Destinations: lead?.ClientLeadDetails?.DestinationName ? [lead?.ClientLeadDetails?.DestinationName] : [],
       Days: lead?.ClientLeadDetails?.Days === '' ? 2 : lead?.ClientLeadDetails?.Days,
       Nights: lead?.ClientLeadDetails?.Days === '' ? 1 : lead?.ClientLeadDetails?.Days - 1,
       PriceType: 'Total',
-      CurrencyType: 'Ruppee',
-      FlightCost: '',
-      VisaCost: '',
-      LandPackageCost: '',
-      TotalTax: '',
-      TotalCost: '',
-      GST: '',
-      TCS: '',
-      GstWaivedOffAmt: '',
-      TcsWaivedOffAmt: '',
-      GstamountWaivedoffOtp: '',
-      PackageWithGST: false,
-      PackageWithTCS: false,
-      TcsamountWaivedoffOtp: '',
-      TcsFlag: true,
-      GstFlag: true,
+      Currency: 'INR',
+      Costs:{
+       LandPackageCost: 0,
+       VisaCost: 0,
+       FlightCost: 0,
+       GSTAmount: 0,
+       TCSAmount: 0,
+       TotalCost: 0,
+       TotalTax: 0
+    
+      },
+      GST: {
+        Enabled: true,
+        WaivedOffAmount: 0,
+        WaivedOffOtps: []
+      },
+      TCS: {
+        Enabled: true,
+        WaivedOffAmount: 0,
+        WaivedOffOtps: []
+      },
       Hotels: [
         {
           nights: [],
-          name: '',
-          city: '',
-          roomType: '',
-          category: '',
-          meals: [],
-          checkInDate: '',
+          Name: '',
+          City: '',
+          RoomType: '',
+          Category: '',
+          Meals: [],
+          checkInDate : '',
           checkOutDate: '',
           comments: '',
         },
@@ -88,16 +96,14 @@ const userData={
         lead?.ClientLeadDetails?.TravelDate,
         lead?.ClientLeadDetails?.Days
       ),
+      TravelEndDateKey: +new Date(lead?.ClientLeadDetails?.TravelDate).toISOString().slice(0,10).replace(/-/g,''),
       ...initialData,
     }),
-    // only recompute when these identity-level inputs change
     [tripId, lead, initialData]
   );
 
-  // RHF + AsyncStorage (rehydrate + autosave)
   const { methods, loading } = useQuotationDraft(tripId, defaults);
 
-  // ✅ Make sections stable (no new identities per keystroke)
   const sections = useMemo(
     () => [
       { key: 'basic', Component: BasicDetails },

@@ -290,7 +290,7 @@ export default function NewLeadForm() {
           <FormField label="Departure City" >
             <Controller
               control={control}
- name="Client-DepartureCity"
+              name="Client-DepartureCity"
               render={({ field: { onChange, value } }) => (
                 <TextInput
                 style={styles.input}

@@ -47,7 +47,7 @@ const userData={
       DestinationName: lead?.ClientLeadDetails?.DestinationName || '',
       IsMultiDestination: false,
       Destinations: lead?.ClientLeadDetails?.DestinationName ? [lead?.ClientLeadDetails?.DestinationName] : [],
-      Days: lead?.ClientLeadDetails?.Days === '' ? 2 : lead?.ClientLeadDetails?.Days,
+      Days: lead?.ClientLeadDetails?.Days === '' ? 2 : +lead?.ClientLeadDetails?.Days,
       Nights: lead?.ClientLeadDetails?.Days === '' ? 1 : lead?.ClientLeadDetails?.Days - 1,
       PriceType: 'Total',
       Currency: 'INR',
@@ -71,30 +71,48 @@ const userData={
         WaivedOffAmount: 0,
         WaivedOffOtps: []
       },
+      Images: {
+    Inclusions: [],
+    Flights: []
+  },
+
       Hotels: [
         {
-          nights: [],
+          Nights: [],
           Name: '',
           City: '',
           RoomType: '',
-          Category: '',
+          Category: 0,
           Meals: [],
-          checkInDate : '',
-          checkOutDate: '',
-          comments: '',
+          CheckInDate : '',
+          CheckInDateKey:null,
+          CheckOutDate: '',
+          CheckOutDateKey:null,
+          Comments: '',
         },
       ],
       Inclusions: [],
-      OtherInclusions: '',
       Exclusions: [],
-      OtherExclusions: '',
-      Itinearies: [],
-      flightsImagesLinks: [],
-      InclusionsImagesLinks: [],
-      travel_data: null,
+      Itinearies: [
+        {
+          Date: "",
+          DateKey: null,
+          Title: "",
+          Activities: "",
+          ImageUrl: "",
+          Description: "",
+        },
+    
+      ],
+    
+      CreatedAt: new Date().toISOString(),
+      LastUpdateStatus:{
+        UpdatedBy: 'Draft',
+        UpdatedTime: new Date().toISOString(),
+      },
       TravelEndDate: calculateTravelEndDate(
         lead?.ClientLeadDetails?.TravelDate,
-        lead?.ClientLeadDetails?.Days
+        Number(lead?.ClientLeadDetails?.Days)
       ),
       TravelEndDateKey: +new Date(lead?.ClientLeadDetails?.TravelDate).toISOString().slice(0,10).replace(/-/g,''),
       ...initialData,

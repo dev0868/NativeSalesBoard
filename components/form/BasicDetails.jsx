@@ -43,8 +43,8 @@ const DepartureCityList = [
 
 const BasicDetails = () => {
   const { control, formState: { errors }, watch, setValue } = useFormContext();
-  const [selectedDestinations, setSelectedDestinations] = useState([]);
   const isMultiDestination = watch('IsMultiDestination', false);
+  const destinations = watch('Destinations', []);
 
   const FormField = ({ 
     label, 
@@ -174,8 +174,8 @@ const BasicDetails = () => {
                   style={[styles.input, errors.NoOfPax && styles.errorInput]}
                   placeholder="1"
                   keyboardType="numeric"
-                  value={value}
-                  onChangeText={onChange}
+                  value={value?.toString() || ''}
+                  onChangeText={(text) => onChange(text ? parseInt(text) || 0 : 0)}
                   placeholderTextColor="#9ca3af"
                 />
               )}
@@ -192,8 +192,8 @@ const BasicDetails = () => {
                   style={[styles.input, errors.Child && styles.errorInput]}
                   placeholder="0"
                   keyboardType="numeric"
-                  value={value}
-                  onChangeText={onChange}
+                  value={value?.toString() || ''}
+                  onChangeText={(text) => onChange(text ? parseInt(text) || 0 : 0)}
                   placeholderTextColor="#9ca3af"
                 />
               )}
@@ -210,8 +210,8 @@ const BasicDetails = () => {
                   style={[styles.input, errors.Infant && styles.errorInput]}
                   placeholder="0"
                   keyboardType="numeric"
-                  value={value}
-                  onChangeText={onChange}
+                  value={value?.toString() || ''}
+                  onChangeText={(text) => onChange(text ? parseInt(text) || 0 : 0)}
                   placeholderTextColor="#9ca3af"
                 />
               )}
@@ -231,8 +231,8 @@ const BasicDetails = () => {
                   style={[styles.input, errors.Days && styles.errorInput]}
                   placeholder="Enter days"
                   keyboardType="numeric"
-                  value={value}
-                  onChangeText={onChange}
+                  value={value?.toString() || ''}
+                  onChangeText={(text) => onChange(text ? parseInt(text) || 0 : 0)}
                   placeholderTextColor="#9ca3af"
                 />
               )}
@@ -249,8 +249,8 @@ const BasicDetails = () => {
                   style={[styles.input, errors.Budget && styles.errorInput]}
                   placeholder="Enter budget"
                   keyboardType="numeric"
-                  value={value}
-                  onChangeText={onChange}
+                  value={value?.toString() || ''}
+                  onChangeText={(text) => onChange(text ? parseFloat(text) || 0 : 0)}
                   placeholderTextColor="#9ca3af"
                 />
               )}
@@ -271,10 +271,8 @@ const BasicDetails = () => {
                 value={value || false}
                 onValueChange={(newValue) => {
                   onChange(newValue);
-                  if (!newValue) {
-                    setSelectedDestinations([]);
-                    setValue('Destinations', []);
-                  }
+                  // Don't clear destinations when switching modes
+                  // Let user keep their selections
                 }}
                 trackColor={{ false: '#e5e7eb', true: '#c084fc' }}
                 thumbColor={value ? '#7c3aed' : '#9ca3af'}
@@ -291,12 +289,12 @@ const BasicDetails = () => {
           rules={{ required: "Departure city is required" }}
           render={({ field: { onChange, value } }) => (
             <TextInput
-            style={[styles.input, errors.FullName && styles.errorInput]}
-            placeholder="Enter customer full name"
-            value={value}
-            onChangeText={onChange}
-            placeholderTextColor="#9ca3af"
-          />
+              style={[styles.input, errors.DepartureCity && styles.errorInput]}
+              placeholder="Enter departure city"
+              value={value}
+              onChangeText={onChange}
+              placeholderTextColor="#9ca3af"
+            />
           )}
         />
       </FormField>
@@ -325,14 +323,13 @@ const BasicDetails = () => {
         <FormField 
           label="Destinations" 
           required 
-          error={selectedDestinations.length === 0 ? { message: "At least one destination is required" } : undefined}
+          error={destinations.length === 0 ? { message: "At least one destination is required" } : undefined}
         >
           <MultiSelectDestinations
             destinations={DestinationList}
-            selectedDestinations={selectedDestinations}
-            onSelectionChange={(destinations) => {
-              setSelectedDestinations(destinations);
-              setValue('Destinations', destinations);
+            selectedDestinations={destinations}
+            onSelectionChange={(newDestinations) => {
+              setValue('Destinations', newDestinations);
             }}
             placeholder="Select multiple destinations"
           />

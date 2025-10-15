@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,8 +8,12 @@ import {
 } from "react-native";
 import { useFormContext, Controller, useFieldArray } from "react-hook-form";
 import { Ionicons } from "@expo/vector-icons";
+import ActivitySelector from "@/components/ui/ActivitySelector";
 
-const ItinerarySection: React.FC = () => {
+const ItinerarySection = () => {
+const [activity,setActivity]=useState([])
+console.log(activity)
+
   const {
     control,
     watch,
@@ -22,23 +26,51 @@ const ItinerarySection: React.FC = () => {
   });
 
   const days = watch("Days") || 1;
-
+const destinations=watch("Destinations");
+console.log(destinations)
   const addDay = () => {
+    const nextDay = fields.length + 1;
+    const today = new Date();
+    const futureDate = new Date(today);
+    futureDate.setDate(today.getDate() + (nextDay - 1));
+    
+    const formattedDate = futureDate.toISOString().split('T')[0];
+    const dateKey = parseInt(formattedDate.replace(/-/g, ''));
+    
     append({
-      day: fields.length + 1,
-      date: "",
-      activities: [],
-      meals: {
-        breakfast: "",
-        lunch: "",
-        dinner: "",
-      },
-      accommodation: "",
-      notes: "",
+      day: nextDay,
+      Date: formattedDate,
+      DateKey: dateKey,
+      Title: `Day ${nextDay} Itinerary`,
+      Activities: "",
+      ImageUrl: "",
+      Description: "",
+      ActivityId: ""
     });
   };
 
-  const removeDay = (index: number) => {
+  const handleActivitySelect = (activity, index) => {
+    const currentItinerary = [...fields];
+    const updatedDay = {
+      ...currentItinerary[index],
+      Title: activity.Title,
+      Description: activity.Description,
+      ImageUrl: activity.ImageUrl,
+      Activities: activity.Activities || "",
+      ActivityId: activity.ActivityId || ""
+    };
+    
+    // Update the form with the selected activity data
+    const updatedItinerary = [...control._formValues.Itinearies];
+    updatedItinerary[index] = updatedDay;
+    control._formValues.Itinearies = updatedItinerary;
+    control._formState.dirtyFields[`Itinearies.${index}`] = true;
+    
+    // Trigger re-render
+    forceUpdate({});
+  };
+
+  const removeDay = (index) => {
     if (fields.length > 1) {
       remove(index);
     }
@@ -49,11 +81,6 @@ const ItinerarySection: React.FC = () => {
     children,
     required = false,
     error,
-  }: {
-    label: string;
-    children: React.ReactNode;
-    required?: boolean;
-    error?: any;
   }) => (
     <View style={{ marginBottom: 24 }}>
       <Text style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}>
@@ -76,17 +103,23 @@ const ItinerarySection: React.FC = () => {
     if (targetDays > currentDays) {
       // Add missing days
       for (let i = currentDays; i < targetDays; i++) {
+        const dayNumber = i + 1;
+        const today = new Date();
+        const futureDate = new Date(today);
+        futureDate.setDate(today.getDate() + i);
+        
+        const formattedDate = futureDate.toISOString().split('T')[0];
+        const dateKey = parseInt(formattedDate.replace(/-/g, ''));
+        
         append({
-          day: i + 1,
-          date: "",
-          activities: [],
-          meals: {
-            breakfast: "",
-            lunch: "",
-            dinner: "",
-          },
-          accommodation: "",
-          notes: "",
+          day: dayNumber,
+          Date: formattedDate,
+          DateKey: dateKey,
+          Title: `Day ${dayNumber} Itinerary`,
+          Activities: "",
+          ImageUrl: "",
+          Description: "",
+          ActivityId: ""
         });
       }
     } else if (targetDays < currentDays) {
@@ -97,6 +130,9 @@ const ItinerarySection: React.FC = () => {
     }
   }, [days]);
 
+  // Force update hook
+  const [, forceUpdate] = React.useReducer(x => x + 1, 0);
+
   // Initialize with one day if empty
   React.useEffect(() => {
     if (fields.length === 0) {
@@ -104,48 +140,40 @@ const ItinerarySection: React.FC = () => {
     }
   }, []);
 
-  // useEffect(() => {
-  //   const fetchActivities = async (destination) => {
-  //     try {
-  //       const response = await fetch(
-  //         `https://2rltmjilx9.execute-api.ap-south-1.amazonaws.com/DataTransaction/activitysightseen?DestinationName=${destination}`,
-  //       );
-  //       const data = await response.json();
-  //       return data?.Items || [];
-  //     } catch (error) {
-  //       console.error(`Error fetching activities for ${destination}:`, error);
-  //       return [];
-  //     }
-  //   };
+  useEffect(() => {
+    const fetchActivities = async (destination) => {
+      try {
+        const response = await fetch(
+          `https://2rltmjilx9.execute-api.ap-south-1.amazonaws.com/DataTransaction/activitysightseen?DestinationName=${destination}`,
+        );
+        const data = await response.json();
+        return data?.Items || [];
+      } catch (error) {
+        console.error(`Error fetching activities for ${destination}:`, error);
+        return [];
+      }
+    };
 
-  //   const fetchAllActivities = async () => {
-  //     let allActivities = [];
+    const fetchAllActivities = async () => {
+      let allActivities = [];
 
-  //     if (BasicDetails.DestinationName) {
-  //       const mainActivities = await fetchActivities(
-  //         BasicDetails.DestinationName,
-  //       );
-  //       allActivities = [...allActivities, ...mainActivities];
-  //     }
+  
 
-  //     if (BasicDetails.OtherDestinations?.length) {
-  //       const otherActivitiesPromises =
-  //         BasicDetails.OtherDestinations.map(fetchActivities);
-  //       const otherActivitiesArray = await Promise.all(otherActivitiesPromises);
-  //       otherActivitiesArray.forEach((items) => {
-  //         allActivities = [...allActivities, ...items];
-  //       });
-  //     }
-  //     setActivity(allActivities);
-  //     dispatch(storeSingleData(allActivities));
-  //   };
+      if (destinations?.length) {
+        const otherActivitiesPromises =
+          destinations?.map(fetchActivities);
+        const otherActivitiesArray = await Promise.all(otherActivitiesPromises);
+        otherActivitiesArray.forEach((items) => {
+          allActivities = [...allActivities, ...items];
+        });
+      }
+      setActivity(allActivities);
+    };
 
-  //   fetchAllActivities();
-  // }, [
-  //   BasicDetails?.DestinationName,
-  //   BasicDetails?.OtherDestinations,
-  //   dispatch,
-  // ]);
+    fetchAllActivities();
+  }, [
+ destinations
+  ]);
 
   return (
     <View style={styles.card}>
@@ -198,112 +226,96 @@ const ItinerarySection: React.FC = () => {
             />
           </FormField>
 
+          {/* Activity Selector */}
+          <FormField label="Select Activity">
+            <View style={{ marginBottom: 15 }}>
+              <Controller
+                control={control}
+                name={`Itinearies.${index}`}
+                render={({ field: { value } }) => (
+                  <ActivitySelector
+                    onSelectActivity={(activity) => handleActivitySelect(activity, index)}
+                    selectedActivity={{
+                      Title: value?.Title || '',
+                      Description: value?.Description || '',
+                      ImageUrl: value?.ImageUrl || '',
+                      ActivityId: value?.ActivityId || ''
+                    }}
+                    destination={destinations?.[0]} // Assuming first destination for activity search
+                  />
+                )}
+              />
+            </View>
+          </FormField>
+
+          {/* Title */}
+          <FormField label="Title">
+            <Controller
+              control={control}
+              name={`Itinearies.${index}.Title`}
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter day title (e.g., Halong Bay Cruise)"
+                  value={value}
+                  onChangeText={onChange}
+                  placeholderTextColor="#9ca3af"
+                />
+              )}
+            />
+          </FormField>
+
           {/* Activities */}
-          <FormField label="Activities & Sightseeing">
+          <FormField label="Activities">
             <Controller
               control={control}
               name={`Itinearies.${index}.Activities`}
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   style={[styles.input, styles.textArea]}
-                  placeholder="List the activities, sightseeing spots, and experiences for this day"
+                  placeholder="List activities (e.g., Cruise, cave visit, kayak)"
                   value={value}
                   onChangeText={onChange}
                   multiline
-                  numberOfLines={4}
+                  numberOfLines={2}
                   placeholderTextColor="#9ca3af"
                 />
               )}
             />
           </FormField>
 
-          {/* Meals */}
-          <Text style={styles.subsectionTitle}>Meals</Text>
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            <View style={{ flex: 1 }}>
-              <FormField label="Breakfast">
-                <Controller
-                  control={control}
-                  name={`Itinearies.${index}.meals.breakfast`}
-                  render={({ field: { onChange, value } }) => (
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Hotel/Restaurant"
-                      value={value}
-                      onChangeText={onChange}
-                      placeholderTextColor="#9ca3af"
-                    />
-                  )}
-                />
-              </FormField>
-            </View>
-            <View style={{ flex: 1 }}>
-              <FormField label="Lunch">
-                <Controller
-                  control={control}
-                  name={`Itinearies.${index}.meals.lunch`}
-                  render={({ field: { onChange, value } }) => (
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Hotel/Restaurant"
-                      value={value}
-                      onChangeText={onChange}
-                      placeholderTextColor="#9ca3af"
-                    />
-                  )}
-                />
-              </FormField>
-            </View>
-            <View style={{ flex: 1 }}>
-              <FormField label="Dinner">
-                <Controller
-                  control={control}
-                  name={`Itinearies.${index}.meals.dinner`}
-                  render={({ field: { onChange, value } }) => (
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Hotel/Restaurant"
-                      value={value}
-                      onChangeText={onChange}
-                      placeholderTextColor="#9ca3af"
-                    />
-                  )}
-                />
-              </FormField>
-            </View>
-          </View>
-
-          {/* Accommodation */}
-          <FormField label="Accommodation">
-            <Controller
-              control={control}
-              name={`Itinearies.${index}.accommodation`}
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  style={styles.input}
-                  placeholder="Hotel name and location"
-                  value={value}
-                  onChangeText={onChange}
-                  placeholderTextColor="#9ca3af"
-                />
-              )}
-            />
-          </FormField>
-
-          {/* Notes */}
-          <FormField label="Additional Notes">
+          {/* Description */}
+          <FormField label="Description">
             <Controller
               control={control}
               name={`Itinearies.${index}.Description`}
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   style={[styles.input, styles.textArea]}
-                  placeholder="Any special notes, timings, or instructions for this day"
+                  placeholder="Enter detailed description of the day's activities"
                   value={value}
                   onChangeText={onChange}
                   multiline
                   numberOfLines={3}
                   placeholderTextColor="#9ca3af"
+                />
+              )}
+            />
+          </FormField>
+
+          {/* Image URL */}
+          <FormField label="Image URL">
+            <Controller
+              control={control}
+              name={`Itinearies.${index}.ImageUrl`}
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="https://example.com/image.jpg"
+                  value={value}
+                  onChangeText={onChange}
+                  placeholderTextColor="#9ca3af"
+                  keyboardType="url"
                 />
               )}
             />

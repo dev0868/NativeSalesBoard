@@ -23,9 +23,18 @@ const FlightSection = () => {
   // Flight search state
   const [showFlightModal, setShowFlightModal] = useState(false);
   const [flightResults, setFlightResults] = useState([]);
-  console.log(flightResults)
   const [loading, setLoading] = useState(false);
-  const [selectedFlights, setSelectedFlights] = useState([]);
+  const [selectedFlights, setSelectedFlights] = useState(watch('selectedFlights') || []);
+
+  // Update selectedFlights when form value changes
+  React.useEffect(() => {
+    const subscription = watch((value, { name }) => {
+      if (name === 'selectedFlights') {
+        setSelectedFlights(value.selectedFlights || []);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch]);
 
   // Flight search function
   const searchFlights = async () => {

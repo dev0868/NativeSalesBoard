@@ -3,7 +3,7 @@ import React, { useEffect, useRef, memo } from "react";
 import { View, Text, TextInput, StyleSheet, Platform } from "react-native";
 import { useFormContext, Controller, useWatch } from "react-hook-form";
 import { Ionicons } from "@expo/vector-icons";
-import NumberParser from "@/utils/NumberParser";
+import { NumberParser } from "@/utils/NumberParser";
 /** ---------- Small helpers ---------- */
 
 /** ---------- Memo building blocks ---------- */
@@ -206,7 +206,7 @@ const CostCalculator = () => {
           render={({ field: { value } }) => {
             const numVal = NumberParser(value);
             const display = Number.isFinite(numVal)
-              ? numVal.toLocaleString("en-IN")
+              ? numVal?.toLocaleString("en-IN")
               : "0";
             return <Text style={styles.totalAmount}>₹{display}</Text>;
           }}

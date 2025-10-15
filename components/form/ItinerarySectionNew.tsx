@@ -1,30 +1,40 @@
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { useFormContext, Controller, useFieldArray } from 'react-hook-form';
-import { Ionicons } from '@expo/vector-icons';
+import React from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
+import { useFormContext, Controller, useFieldArray } from "react-hook-form";
+import { Ionicons } from "@expo/vector-icons";
 
 const ItinerarySection: React.FC = () => {
-  const { control, watch, formState: { errors } } = useFormContext();
-  
+  const {
+    control,
+    watch,
+    formState: { errors },
+  } = useFormContext();
+
   const { fields, append, remove } = useFieldArray({
     control,
-    name: 'Itinerary',
+    name: "Itinerary",
   });
 
-  const days = watch('Days') || 1;
+  const days = watch("Days") || 1;
 
   const addDay = () => {
     append({
       day: fields.length + 1,
-      date: '',
+      date: "",
       activities: [],
       meals: {
-        breakfast: '',
-        lunch: '',
-        dinner: '',
+        breakfast: "",
+        lunch: "",
+        dinner: "",
       },
-      accommodation: '',
-      notes: '',
+      accommodation: "",
+      notes: "",
     });
   };
 
@@ -34,16 +44,16 @@ const ItinerarySection: React.FC = () => {
     }
   };
 
-  const FormField = ({ 
-    label, 
-    children, 
-    required = false, 
-    error 
-  }: { 
-    label: string; 
-    children: React.ReactNode; 
-    required?: boolean; 
-    error?: any; 
+  const FormField = ({
+    label,
+    children,
+    required = false,
+    error,
+  }: {
+    label: string;
+    children: React.ReactNode;
+    required?: boolean;
+    error?: any;
   }) => (
     <View style={{ marginBottom: 24 }}>
       <Text style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}>
@@ -62,21 +72,21 @@ const ItinerarySection: React.FC = () => {
   React.useEffect(() => {
     const currentDays = fields.length;
     const targetDays = parseInt(days) || 1;
-    
+
     if (targetDays > currentDays) {
       // Add missing days
       for (let i = currentDays; i < targetDays; i++) {
         append({
           day: i + 1,
-          date: '',
+          date: "",
           activities: [],
           meals: {
-            breakfast: '',
-            lunch: '',
-            dinner: '',
+            breakfast: "",
+            lunch: "",
+            dinner: "",
           },
-          accommodation: '',
-          notes: '',
+          accommodation: "",
+          notes: "",
         });
       }
     } else if (targetDays < currentDays) {
@@ -93,6 +103,49 @@ const ItinerarySection: React.FC = () => {
       addDay();
     }
   }, []);
+
+  // useEffect(() => {
+  //   const fetchActivities = async (destination) => {
+  //     try {
+  //       const response = await fetch(
+  //         `https://2rltmjilx9.execute-api.ap-south-1.amazonaws.com/DataTransaction/activitysightseen?DestinationName=${destination}`,
+  //       );
+  //       const data = await response.json();
+  //       return data?.Items || [];
+  //     } catch (error) {
+  //       console.error(`Error fetching activities for ${destination}:`, error);
+  //       return [];
+  //     }
+  //   };
+
+  //   const fetchAllActivities = async () => {
+  //     let allActivities = [];
+
+  //     if (BasicDetails.DestinationName) {
+  //       const mainActivities = await fetchActivities(
+  //         BasicDetails.DestinationName,
+  //       );
+  //       allActivities = [...allActivities, ...mainActivities];
+  //     }
+
+  //     if (BasicDetails.OtherDestinations?.length) {
+  //       const otherActivitiesPromises =
+  //         BasicDetails.OtherDestinations.map(fetchActivities);
+  //       const otherActivitiesArray = await Promise.all(otherActivitiesPromises);
+  //       otherActivitiesArray.forEach((items) => {
+  //         allActivities = [...allActivities, ...items];
+  //       });
+  //     }
+  //     setActivity(allActivities);
+  //     dispatch(storeSingleData(allActivities));
+  //   };
+
+  //   fetchAllActivities();
+  // }, [
+  //   BasicDetails?.DestinationName,
+  //   BasicDetails?.OtherDestinations,
+  //   dispatch,
+  // ]);
 
   return (
     <View style={styles.card}>
@@ -166,7 +219,7 @@ const ItinerarySection: React.FC = () => {
 
           {/* Meals */}
           <Text style={styles.subsectionTitle}>Meals</Text>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flexDirection: "row", gap: 8 }}>
             <View style={{ flex: 1 }}>
               <FormField label="Breakfast">
                 <Controller
@@ -259,10 +312,7 @@ const ItinerarySection: React.FC = () => {
       ))}
 
       {/* Add Day Button */}
-      <TouchableOpacity
-        onPress={addDay}
-        style={styles.addButton}
-      >
+      <TouchableOpacity onPress={addDay} style={styles.addButton}>
         <Ionicons name="add-circle" size={24} color="#10b981" />
         <Text style={styles.addButtonText}>Add Another Day</Text>
       </TouchableOpacity>
@@ -298,9 +348,9 @@ const styles = StyleSheet.create({
     color: "#111827",
   },
   infoBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#eff6ff',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#eff6ff",
     padding: 12,
     borderRadius: 8,
     marginBottom: 16,
@@ -308,7 +358,7 @@ const styles = StyleSheet.create({
   infoText: {
     marginLeft: 8,
     fontSize: 14,
-    color: '#3b82f6',
+    color: "#3b82f6",
     flex: 1,
   },
   dayCard: {
@@ -320,31 +370,31 @@ const styles = StyleSheet.create({
     borderColor: "#e5e7eb",
   },
   dayHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
   },
   dayBadge: {
-    backgroundColor: '#10b981',
+    backgroundColor: "#10b981",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
   },
   dayNumber: {
-    color: 'white',
+    color: "white",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   removeButton: {
     padding: 8,
     borderRadius: 8,
-    backgroundColor: '#fef2f2',
+    backgroundColor: "#fef2f2",
   },
   subsectionTitle: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
+    fontWeight: "600",
+    color: "#374151",
     marginBottom: 8,
     marginTop: 8,
   },
@@ -364,24 +414,24 @@ const styles = StyleSheet.create({
   textArea: {
     height: 100,
     paddingTop: 12,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     padding: 16,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#10b981',
-    borderStyle: 'dashed',
-    backgroundColor: '#f0fdf4',
+    borderColor: "#10b981",
+    borderStyle: "dashed",
+    backgroundColor: "#f0fdf4",
   },
   addButtonText: {
     marginLeft: 8,
     fontSize: 16,
-    fontWeight: '600',
-    color: '#10b981',
+    fontWeight: "600",
+    color: "#10b981",
   },
 });
 

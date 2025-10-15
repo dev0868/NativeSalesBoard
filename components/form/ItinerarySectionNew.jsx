@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
 import { useFormContext, Controller, useFieldArray } from "react-hook-form";
 import { Ionicons } from "@expo/vector-icons";
 import ActivitySelector from "@/components/ui/ActivitySelector";
+import DatePicker from "@/components/ui/DatePicker";
 
 const ItinerarySection = () => {
 const [activity,setActivity]=useState([])
@@ -18,6 +19,7 @@ console.log(activity)
     control,
     watch,
     formState: { errors },
+    getValues,
   } = useFormContext();
 
   const { fields, append, remove } = useFieldArray({
@@ -26,26 +28,39 @@ console.log(activity)
   });
 
   const days = watch("Days") || 1;
-const destinations=watch("Destinations");
-console.log(destinations)
+  const destinations = watch("Destinations");
+  const travelDate = watch("TravelDate");
+  
+  // Format date to YYYY-MM-DD
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0];
+  };
+  
+  // Generate dates for the itinerary based on travel date
+  const getItineraryDate = (index) => {
+    if (!travelDate) return '';
+    const date = new Date(travelDate);
+    date.setDate(date.getDate() + index);
+    return formatDate(date);
+  };
   const addDay = () => {
     const nextDay = fields.length + 1;
-    const today = new Date();
-    const futureDate = new Date(today);
-    futureDate.setDate(today.getDate() + (nextDay - 1));
+    const baseDate = travelDate ? new Date(travelDate) : new Date();
+    const futureDate = new Date(baseDate);
+    futureDate.setDate(baseDate.getDate() + (nextDay - 1));
     
-    const formattedDate = futureDate.toISOString().split('T')[0];
+    const formattedDate = formatDate(futureDate);
     const dateKey = parseInt(formattedDate.replace(/-/g, ''));
     
     append({
-      day: nextDay,
       Date: formattedDate,
       DateKey: dateKey,
       Title: `Day ${nextDay} Itinerary`,
       Activities: "",
       ImageUrl: "",
-      Description: "",
-      ActivityId: ""
+      Description: ""
     });
   };
 
@@ -53,11 +68,10 @@ console.log(destinations)
     const currentItinerary = [...fields];
     const updatedDay = {
       ...currentItinerary[index],
-      Title: activity.Title,
-      Description: activity.Description,
-      ImageUrl: activity.ImageUrl,
-      Activities: activity.Activities || "",
-      ActivityId: activity.ActivityId || ""
+      Title: activity.Title || currentItinerary[index]?.Title || `Day ${index + 1} Itinerary`,
+      Description: activity.Description || currentItinerary[index]?.Description || "",
+      ImageUrl: activity.ImageUrl || currentItinerary[index]?.ImageUrl || "",
+      Activities: activity.Title || currentItinerary[index]?.Activities || ""
     };
     
     // Update the form with the selected activity data
@@ -72,7 +86,22 @@ console.log(destinations)
 
   const removeDay = (index) => {
     if (fields.length > 1) {
+      // Remove the day at the specified index
       remove(index);
+      
+      // Update the day numbers for remaining items
+      const updatedItineraries = [...control._formValues.Itinearies];
+      updatedItineraries.splice(index, 1);
+      
+      // Update the day numbers for remaining items
+      updatedItineraries.forEach((item, idx) => {
+        item.day = idx + 1;
+        item.Title = `Day ${idx + 1} Itinerary`;
+      });
+      
+      // Update the form values
+      control._formValues.Itinearies = updatedItineraries;
+      forceUpdate();
     }
   };
 
@@ -95,20 +124,20 @@ console.log(destinations)
     </View>
   );
 
-  // Auto-generate days based on trip duration
+  // Auto-generate days based on trip duration and travel date
   React.useEffect(() => {
     const currentDays = fields.length;
     const targetDays = parseInt(days) || 1;
+    const baseDate = travelDate ? new Date(travelDate) : new Date();
 
     if (targetDays > currentDays) {
       // Add missing days
       for (let i = currentDays; i < targetDays; i++) {
         const dayNumber = i + 1;
-        const today = new Date();
-        const futureDate = new Date(today);
-        futureDate.setDate(today.getDate() + i);
+        const futureDate = new Date(baseDate);
+        futureDate.setDate(baseDate.getDate() + i);
         
-        const formattedDate = futureDate.toISOString().split('T')[0];
+        const formattedDate = formatDate(futureDate);
         const dateKey = parseInt(formattedDate.replace(/-/g, ''));
         
         append({
@@ -128,7 +157,7 @@ console.log(destinations)
         remove(i);
       }
     }
-  }, [days]);
+  }, [days, travelDate]);
 
   // Force update hook
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
@@ -209,18 +238,24 @@ console.log(destinations)
             )}
           </View>
 
-          {/* Date */}
+          {/* Date Picker */}
           <FormField label="Date">
             <Controller
               control={control}
               name={`Itinearies.${index}.Date`}
               render={({ field: { onChange, value } }) => (
-                <TextInput
+                <DatePicker
+                  value={value || getItineraryDate(index)}
+                  onDateChange={(date) => {
+                    onChange(date);
+                    // Update the DateKey when date changes
+                    const dateKey = parseInt(date.replace(/-/g, ''));
+                    if (control._formValues.Itinearies && control._formValues.Itinearies[index]) {
+                      control._formValues.Itinearies[index].DateKey = dateKey;
+                    }
+                  }}
+                  placeholder="Select date"
                   style={styles.input}
-                  placeholder="DD/MM/YYYY"
-                  value={value}
-                  onChangeText={onChange}
-                  placeholderTextColor="#9ca3af"
                 />
               )}
             />

@@ -132,7 +132,7 @@ const ItinerarySection: React.FC = () => {
           <FormField label="Date">
             <Controller
               control={control}
-              name={`Itinerary.${index}.date`}
+              name={`Itinearies.${index}.Date`}
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   style={styles.input}
@@ -149,7 +149,7 @@ const ItinerarySection: React.FC = () => {
           <FormField label="Activities & Sightseeing">
             <Controller
               control={control}
-              name={`Itinerary.${index}.activities`}
+              name={`Itinearies.${index}.Activities`}
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   style={[styles.input, styles.textArea]}
@@ -171,7 +171,7 @@ const ItinerarySection: React.FC = () => {
               <FormField label="Breakfast">
                 <Controller
                   control={control}
-                  name={`Itinerary.${index}.meals.breakfast`}
+                  name={`Itinearies.${index}.meals.breakfast`}
                   render={({ field: { onChange, value } }) => (
                     <TextInput
                       style={styles.input}
@@ -188,7 +188,7 @@ const ItinerarySection: React.FC = () => {
               <FormField label="Lunch">
                 <Controller
                   control={control}
-                  name={`Itinerary.${index}.meals.lunch`}
+                  name={`Itinearies.${index}.meals.lunch`}
                   render={({ field: { onChange, value } }) => (
                     <TextInput
                       style={styles.input}
@@ -205,7 +205,7 @@ const ItinerarySection: React.FC = () => {
               <FormField label="Dinner">
                 <Controller
                   control={control}
-                  name={`Itinerary.${index}.meals.dinner`}
+                  name={`Itinearies.${index}.meals.dinner`}
                   render={({ field: { onChange, value } }) => (
                     <TextInput
                       style={styles.input}
@@ -224,7 +224,7 @@ const ItinerarySection: React.FC = () => {
           <FormField label="Accommodation">
             <Controller
               control={control}
-              name={`Itinerary.${index}.accommodation`}
+              name={`Itinearies.${index}.accommodation`}
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   style={styles.input}
@@ -241,7 +241,7 @@ const ItinerarySection: React.FC = () => {
           <FormField label="Additional Notes">
             <Controller
               control={control}
-              name={`Itinerary.${index}.notes`}
+              name={`Itinearies.${index}.Description`}
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   style={[styles.input, styles.textArea]}

@@ -75,14 +75,14 @@ const BasicDetails = () => {
         <Text style={styles.sectionTitle}>Basic Details</Text>
       </View>
 
-      <FormField label="Full Name" required error={errors.FullName}>
+      <FormField label="Full Name" required error={errors["Client-Name"]}>
         <Controller
           control={control}
-          name="FullName"
+          name="Client-Name"
           rules={{ required: "Full name is required" }}
           render={({ field: { onChange, value } }) => (
             <TextInput
-              style={[styles.input, errors.FullName && styles.errorInput]}
+              style={[styles.input, errors["Client-Name"] && styles.errorInput]}
               placeholder="Enter customer full name"
               value={value}
               onChangeText={onChange}
@@ -92,10 +92,10 @@ const BasicDetails = () => {
         />
       </FormField>
 
-      <FormField label="Contact Number" required error={errors.Contact}>
+      <FormField label="Contact Number" required error={errors["Client-Contact"]}>
         <Controller
           control={control}
-          name="Contact"
+          name="Client-Contact"
           rules={{
             required: "Contact is required",
             minLength: { value: 10, message: "Enter 10 digits" },
@@ -110,7 +110,7 @@ const BasicDetails = () => {
               <TextInput
                 style={[
                   styles.inputWithPrefix,
-                  errors.Contact && styles.errorInput,
+                  errors["Client-Contact"] && styles.errorInput,
                 ]}
                 placeholder="Enter 10-digit number"
                 keyboardType="phone-pad"
@@ -124,10 +124,10 @@ const BasicDetails = () => {
         />
       </FormField>
 
-      <FormField label="Email Address" error={errors.Email}>
+      <FormField label="Email Address" error={errors["Client-Email"]}>
         <Controller
           control={control}
-          name="Email"
+          name="Client-Email"
           rules={{
             pattern: {
               value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
@@ -136,7 +136,7 @@ const BasicDetails = () => {
           }}
           render={({ field: { onChange, value } }) => (
             <TextInput
-              style={[styles.input, errors.Email && styles.errorInput]}
+              style={[styles.input, errors["Client-Email"] && styles.errorInput]}
               placeholder="Enter email address"
               keyboardType="email-address"
               autoCapitalize="none"

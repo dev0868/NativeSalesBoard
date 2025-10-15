@@ -85,7 +85,7 @@ const HotelsSection = () => {
           <FormField label="Hotel Name" required>
             <Controller
               control={control}
-              name={`Hotels.${index}.name`}
+              name={`Hotels.${index}.Name`}
               rules={{ required: "Hotel name is required" }}
               render={({ field: { onChange, value } }) => (
                 <TextInput
@@ -104,7 +104,7 @@ const HotelsSection = () => {
               <FormField label="City" required>
                 <Controller
                   control={control}
-                  name={`Hotels.${index}.city`}
+                  name={`Hotels.${index}.City`}
                   rules={{ required: "City is required" }}
                   render={({ field: { onChange, value } }) => (
                     <TextInput
@@ -122,7 +122,7 @@ const HotelsSection = () => {
               <FormField label="Room Type">
                 <Controller
                   control={control}
-                  name={`Hotels.${index}.roomType`}
+                  name={`Hotels.${index}.RoomType`}
                   render={({ field: { onChange, value } }) => (
                     <TextInput
                       style={styles.input}
@@ -142,7 +142,7 @@ const HotelsSection = () => {
               <FormField label="Category">
                 <Controller
                   control={control}
-                  name={`Hotels.${index}.category`}
+                  name={`Hotels.${index}.Category`}
                   render={({ field: { onChange, value } }) => (
                     <TextInput
                       style={styles.input}
@@ -159,7 +159,7 @@ const HotelsSection = () => {
               <FormField label="Meals">
                 <Controller
                   control={control}
-                  name={`Hotels.${index}.meals`}
+                  name={`Hotels.${index}.Meals`}
                   render={({ field: { onChange, value } }) => (
                     <TextInput
                       style={styles.input}
@@ -179,7 +179,7 @@ const HotelsSection = () => {
               <FormField label="Check-in Date">
                 <Controller
                   control={control}
-                  name={`Hotels.${index}.checkInDate`}
+                  name={`Hotels.${index}.CheckInDate`}
                   render={({ field: { onChange, value } }) => (
                     <DatePicker
                       value={value}
@@ -195,7 +195,7 @@ const HotelsSection = () => {
               <FormField label="Check-out Date">
                 <Controller
                   control={control}
-                  name={`Hotels.${index}.checkOutDate`}
+                  name={`Hotels.${index}.CheckOutDate`}
                   render={({ field: { onChange, value } }) => (
                     <DatePicker
                       value={value}
@@ -212,7 +212,7 @@ const HotelsSection = () => {
           <FormField label="Comments">
             <Controller
               control={control}
-              name={`Hotels.${index}.comments`}
+              name={`Hotels.${index}.Comments`}
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   style={[styles.input, styles.textArea]}

@@ -1,14 +1,10 @@
 // components/form/CostCalculatorNew.tsx
-import React, { useEffect, useRef, memo } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import { useFormContext, Controller, useWatch } from 'react-hook-form';
-import { Ionicons } from '@expo/vector-icons';
-
+import React, { useEffect, useRef, memo } from "react";
+import { View, Text, TextInput, StyleSheet, Platform } from "react-native";
+import { useFormContext, Controller, useWatch } from "react-hook-form";
+import { Ionicons } from "@expo/vector-icons";
+import NumberParser from "@/utils/NumberParser";
 /** ---------- Small helpers ---------- */
-const num = (v) => {
-  const x = parseFloat(String(v ?? '').trim());
-  return Number.isFinite(x) ? x : 0;
-};
 
 /** ---------- Memo building blocks ---------- */
 const FormField = memo(function FormField({
@@ -19,37 +15,20 @@ const FormField = memo(function FormField({
 }) {
   return (
     <View style={{ marginBottom: 24 }}>
-      <Text style={{ color: '#374151', fontWeight: '600', marginBottom: 8 }}>
-        {label} {required && <Text style={{ color: 'red' }}>*</Text>}
+      <Text style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}>
+        {label} {required && <Text style={{ color: "red" }}>*</Text>}
       </Text>
       {children}
       {!!error?.message && (
-        <Text style={{ color: 'red', fontSize: 12, marginTop: 4 }}>{error.message}</Text>
+        <Text style={{ color: "red", fontSize: 12, marginTop: 4 }}>
+          {error.message}
+        </Text>
       )}
     </View>
   );
 });
 
-const CheckboxField = memo(function CheckboxField({
-  label,
-  value,
-  onValueChange,
-}) {
-  return (
-    <TouchableOpacity
-      activeOpacity={0.8}
-      style={styles.checkboxContainer}
-      onPress={() => onValueChange(!value)}
-    >
-      <View style={[styles.checkbox, value && styles.checkboxChecked]}>
-        {value && <Ionicons name="checkmark" size={16} color="white" />}
-      </View>
-      <Text style={styles.checkboxLabel}>{label}</Text>
-    </TouchableOpacity>
-  );
-});
-
-/** A memoized RHF numeric input to minimize re-mounts while typing */
+/** A memoized RHF numeric input that stores numbers (not strings) */
 const RHFNumberInput = memo(function RHFNumberInput({
   name,
   control,
@@ -64,12 +43,14 @@ const RHFNumberInput = memo(function RHFNumberInput({
         <TextInput
           style={[styles.input, error && styles.errorInput]}
           placeholder={placeholder}
-          keyboardType={Platform.select({ ios: 'numbers-and-punctuation', android: 'numeric' })}
-          value={value == null ? '' : String(value)}
-          onChangeText={onChange}
+          keyboardType={Platform.select({
+            ios: "decimal-pad",
+            android: "numeric",
+          })}
+          value={value == null ? "" : String(value)}
+          onChangeText={(txt) => onChange(NumberParser(txt))}
           onBlur={onBlur}
           placeholderTextColor="#9ca3af"
-          // keep focus stable on Android while typing/submitting
           blurOnSubmit={false}
           importantForAutofill="no"
           autoCorrect={false}
@@ -81,9 +62,14 @@ const RHFNumberInput = memo(function RHFNumberInput({
 
 /** ---------- Main component ---------- */
 const CostCalculator = () => {
-  const { control, setValue, getValues, formState: { errors } } = useFormContext();
+  const {
+    control,
+    setValue,
+    getValues,
+    formState: { errors },
+  } = useFormContext();
 
-  // Subscribe only to the fields we truly need for total calculation
+  // Watch the CORRECT nested paths under "Costs"
   const [
     flightCost,
     visaCost,
@@ -98,44 +84,43 @@ const CostCalculator = () => {
   ] = useWatch({
     control,
     name: [
-      'FlightCost',
-      'VisaCost',
-      'LandPackageCost',
-      'TotalTax',
-      'GST',
-      'TCS',
-      'GstWaivedOffAmt',
-      'TcsWaivedOffAmt',
-      'PackageWithGST',
-      'PackageWithTCS',
+      "Costs.FlightCost",
+      "Costs.VisaCost",
+      "Costs.LandPackageCost",
+      "Costs.TotalTax",
+      "Costs.GST",
+      "Costs.TCS",
+      "Costs.GstWaivedOffAmt",
+      "Costs.TcsWaivedOffAmt",
+      "Costs.PackageWithGST",
+      "Costs.PackageWithTCS",
     ],
   });
 
-  // Schedule setValue to next frame to avoid racing the typing render
   const rafId = useRef(null);
 
   useEffect(() => {
-    const flight = num(flightCost);
-    const visa = num(visaCost);
-    const land = num(landPackageCost);
-    const tax = num(totalTax);
-    const gstAmt = num(gst);
-    const tcsAmt = num(tcs);
-    const gstW = num(gstWaivedOff);
-    const tcsW = num(tcsWaivedOff);
+    // Coerce to numbers with safe defaults
+    const flight = NumberParser(flightCost);
+    const visa = NumberParser(visaCost);
+    const land = NumberParser(landPackageCost);
+    const tax = NumberParser(totalTax);
+    const gstAmt = NumberParser(gst);
+    const tcsAmt = NumberParser(tcs);
+    const gstW = NumberParser(gstWaivedOff);
+    const tcsW = NumberParser(tcsWaivedOff);
 
     let total = flight + visa + land + tax;
-    if (packageWithGST) total += (gstAmt - gstW);
-    if (packageWithTCS) total += (tcsAmt - tcsW);
+    if (packageWithGST) total += gstAmt - gstW;
+    if (packageWithTCS) total += tcsAmt - tcsW;
 
-    const next = String(total);
-    const current = String(getValues('TotalCost') ?? '');
+    const current = NumberParser(getValues("Costs.TotalCost"));
 
-    if (current !== next) {
+    if (current !== total) {
       if (rafId.current) cancelAnimationFrame(rafId.current);
       rafId.current = requestAnimationFrame(() => {
-        setValue('TotalCost', next, {
-          shouldDirty: false,
+        setValue("Costs.TotalCost", total, {
+          shouldDirty: true,
           shouldTouch: false,
           shouldValidate: false,
         });
@@ -164,7 +149,7 @@ const CostCalculator = () => {
     <View style={styles.card}>
       {/* Section Header */}
       <View style={styles.sectionHeader}>
-        <View style={[styles.iconWrapper, { backgroundColor: '#dbeafe' }]}>
+        <View style={[styles.iconWrapper, { backgroundColor: "#dbeafe" }]}>
           <Ionicons name="calculator" size={20} color="#3b82f6" />
         </View>
         <Text style={styles.sectionTitle}>Cost Calculator</Text>
@@ -173,54 +158,56 @@ const CostCalculator = () => {
       {/* Basic Costs */}
       <Text style={styles.sectionSubtitle}>Package Costs</Text>
 
-      {/* Avoid RN 'gap' to prevent layout thrash on some versions */}
-      <View style={{ flexDirection: 'row' }}>
+      <View style={{ flexDirection: "row" }}>
         <View style={{ flex: 1, marginRight: 12 }}>
-          <FormField label="Flight Cost (₹)" error={errors?.FlightCost}>
+          <FormField label="Flight Cost (₹)" error={errors?.Costs?.FlightCost}>
             <RHFNumberInput
-              name="FlightCost"
+              name="Costs.FlightCost"
               control={control}
-              error={errors?.FlightCost}
+              error={errors?.Costs?.FlightCost}
               placeholder="Enter flight cost"
             />
           </FormField>
         </View>
 
         <View style={{ flex: 1 }}>
-          <FormField label="Visa Cost (₹)" error={errors?.VisaCost}>
+          <FormField label="Visa Cost (₹)" error={errors?.Costs?.VisaCost}>
             <RHFNumberInput
-              name="VisaCost"
+              name="Costs.VisaCost"
               control={control}
-              error={errors?.VisaCost}
+              error={errors?.Costs?.VisaCost}
               placeholder="Enter visa cost"
             />
           </FormField>
         </View>
       </View>
 
-      <FormField label="Land Package Cost (₹)" error={errors?.LandPackageCost}>
+      <FormField
+        label="Land Package Cost (₹)"
+        error={errors?.Costs?.LandPackageCost}
+      >
         <RHFNumberInput
-          name="LandPackageCost"
+          name="Costs.LandPackageCost"
           control={control}
-          error={errors?.LandPackageCost}
+          error={errors?.Costs?.LandPackageCost}
           placeholder="Enter land package cost"
         />
       </FormField>
 
-    
+      {/* (Optional) Taxes / toggles — if you render these elsewhere, keep the same field paths */}
+      {/* <CheckboxField ... writes to Costs.PackageWithGST / Costs.PackageWithTCS /> */}
 
- 
-
-    
       {/* Total Cost Display */}
       <View style={styles.totalContainer}>
         <Text style={styles.totalLabel}>Total Package Cost</Text>
         <Controller
           control={control}
-          name="TotalCost"
+          name="Costs.TotalCost"
           render={({ field: { value } }) => {
-            const numVal = Number.parseFloat(String(value ?? '0'));
-            const display = Number.isFinite(numVal) ? numVal.toLocaleString('en-IN') : '0';
+            const numVal = NumberParser(value);
+            const display = Number.isFinite(numVal)
+              ? numVal.toLocaleString("en-IN")
+              : "0";
             return <Text style={styles.totalAmount}>₹{display}</Text>;
           }}
         />
@@ -231,93 +218,93 @@ const CostCalculator = () => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 12,
   },
   iconWrapper: {
-    backgroundColor: '#dbeafe',
+    backgroundColor: "#dbeafe",
     borderRadius: 50,
     padding: 8,
     marginRight: 8,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#111827',
+    fontWeight: "700",
+    color: "#111827",
   },
   sectionSubtitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
+    fontWeight: "600",
+    color: "#374151",
     marginBottom: 12,
     marginTop: 16,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: "#e5e7eb",
     padding: 12,
     borderRadius: 12,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     fontSize: 16,
-    color: '#1f2937',
+    color: "#1f2937",
   },
   errorInput: {
-    borderColor: '#ef4444',
+    borderColor: "#ef4444",
     borderWidth: 2,
   },
   checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 16,
   },
   checkbox: {
     width: 20,
     height: 20,
     borderWidth: 2,
-    borderColor: '#e5e7eb',
+    borderColor: "#e5e7eb",
     borderRadius: 4,
     marginRight: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   checkboxChecked: {
-    backgroundColor: '#7c3aed',
-    borderColor: '#7c3aed',
+    backgroundColor: "#7c3aed",
+    borderColor: "#7c3aed",
   },
   checkboxLabel: {
     fontSize: 16,
-    color: '#374151',
-    fontWeight: '500',
+    color: "#374151",
+    fontWeight: "500",
   },
   totalContainer: {
-    backgroundColor: '#f9fafb',
+    backgroundColor: "#f9fafb",
     padding: 16,
     borderRadius: 12,
     marginTop: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   totalLabel: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
+    fontWeight: "600",
+    color: "#374151",
   },
   totalAmount: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#7c3aed',
+    fontWeight: "700",
+    color: "#7c3aed",
   },
 });
 

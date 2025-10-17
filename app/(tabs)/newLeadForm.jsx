@@ -17,7 +17,7 @@ import { getUserProfile } from "@/utils/userProfile";
 
 const DestinationList = [
   "Bali",
-  "Maldives", 
+  "Maldives",
   "Dubai",
   "Thailand",
   "Singapore",
@@ -33,9 +33,8 @@ const DestinationList = [
   "South Korea",
   "Nepal",
   "Bhutan",
-  "Sri Lanka"
+  "Sri Lanka",
 ];
-
 
 export default function NewLeadForm() {
   const {
@@ -48,22 +47,22 @@ export default function NewLeadForm() {
   // State for multi-select destinations
   const [selectedDestinations, setSelectedDestinations] = useState([]);
   const [isMultiDestination, setIsMultiDestination] = useState(false);
-  
+
   // Loading state for API call
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
-    
+
     try {
       // Calculate end date
       const calculateEndDate = (startDate, days) => {
         const start = new Date(startDate);
         const end = new Date(start);
         end.setDate(start.getDate() + days - 1);
-        return end.toISOString().split('T')[0];
+        return end.toISOString().split("T")[0];
       };
-
+      // make commment on this
       // Get sales person info from AsyncStorage
       const salesPersonInfo = await getUserProfile();
       console.log(salesPersonInfo);
@@ -77,20 +76,31 @@ export default function NewLeadForm() {
         "Client-Email": data["Client-Email"],
         "Client-Contact": data["Client-Contact"],
         "Client-DepartureCity": data["Client-DepartureCity"],
-        "Client-Destination": isMultiDestination 
-          ? (selectedDestinations.length > 0 ? selectedDestinations[0] : data["Client-Destination"])
+        "Client-Destination": isMultiDestination
+          ? selectedDestinations.length > 0
+            ? selectedDestinations[0]
+            : data["Client-Destination"]
           : data["Client-Destination"],
-        "Client-Destinations": isMultiDestination ? selectedDestinations : [data["Client-Destination"]],
-        "IsMultiDestination": isMultiDestination,
+        "Client-Destinations": isMultiDestination
+          ? selectedDestinations
+          : [data["Client-Destination"]],
+        IsMultiDestination: isMultiDestination,
         "Client-Pax": parseInt(data["Client-Pax"]) || 0,
         "Client-Child": parseInt(data["Client-Child"]) || 0,
         "Client-Infant": parseInt(data["Client-Infant"]) || 0,
         "Client-Days": parseInt(data["Client-Days"]) || 0,
         "Client-Budget": parseInt(data["Client-Budget"]) || 0,
-        "Client-TravelDate": data["Client-TravelDate"]?.date || data["Client-TravelDate"],
-        "Client-TravelEndDate": data["Client-TravelDate"]?.date 
-          ? calculateEndDate(data["Client-TravelDate"].date, parseInt(data["Client-Days"]) || 0)
-          : calculateEndDate(data["Client-TravelDate"], parseInt(data["Client-Days"]) || 0),
+        "Client-TravelDate":
+          data["Client-TravelDate"]?.date || data["Client-TravelDate"],
+        "Client-TravelEndDate": data["Client-TravelDate"]?.date
+          ? calculateEndDate(
+              data["Client-TravelDate"].date,
+              parseInt(data["Client-Days"]) || 0
+            )
+          : calculateEndDate(
+              data["Client-TravelDate"],
+              parseInt(data["Client-Days"]) || 0
+            ),
 
         LeadSource: data.LeadSource || "WebApp",
         LeadPotential: data.LeadPotential || "Medium",
@@ -109,51 +119,49 @@ export default function NewLeadForm() {
             By: salesPersonInfo.salesPersonEmail,
             Role: "Sales",
             Message: data.Comments || "Initial lead created",
-            At: new Date().toISOString()
-          }
-        ]
+            At: new Date().toISOString(),
+          },
+        ],
       };
 
       console.log("Lead Data:", JSON.stringify(leadData, null, 2));
 
-      const response = await fetch('https://0rq0f90i05.execute-api.ap-south-1.amazonaws.com/salesapp/lead-managment/create-quote', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(leadData),
-      });
+      const response = await fetch(
+        "https://0rq0f90i05.execute-api.ap-south-1.amazonaws.com/salesapp/lead-managment/create-quote",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(leadData),
+        }
+      );
 
       const responseData = await response.json();
 
       if (response.ok) {
-        Alert.alert(
-          "Success", 
-          "Lead created successfully!", 
-          [
-            { 
-              text: "OK", 
-              onPress: () => {
-                reset();
-                setSelectedDestinations([]);
-                setIsMultiDestination(false);
-              }
-            }
-          ]
-        );
+        Alert.alert("Success", "Lead created successfully!", [
+          {
+            text: "OK",
+            onPress: () => {
+              reset();
+              setSelectedDestinations([]);
+              setIsMultiDestination(false);
+            },
+          },
+        ]);
       } else {
         Alert.alert(
-          "Error", 
-          responseData.message || "Failed to create lead. Please try again.", 
+          "Error",
+          responseData.message || "Failed to create lead. Please try again.",
           [{ text: "OK" }]
         );
       }
-
     } catch (error) {
       console.error("Error creating lead:", error);
       Alert.alert(
-        "Error", 
-        "Network error. Please check your connection and try again.", 
+        "Error",
+        "Network error. Please check your connection and try again.",
         [{ text: "OK" }]
       );
     } finally {
@@ -161,12 +169,7 @@ export default function NewLeadForm() {
     }
   };
 
-  const FormField = ({
-    label,
-    children,
-    required = false,
-    error,
-  }) => (
+  const FormField = ({ label, children, required = false, error }) => (
     <View style={{ marginBottom: 24 }}>
       <Text style={{ color: "#374151", fontWeight: "600", marginBottom: 8 }}>
         {label} {required && <Text style={{ color: "red" }}>*</Text>}
@@ -210,7 +213,10 @@ export default function NewLeadForm() {
               rules={{ required: "Client name is required" }}
               render={({ field: { onChange, value } }) => (
                 <TextInput
-                  style={[styles.input, errors["Client-Name"] && styles.errorInput]}
+                  style={[
+                    styles.input,
+                    errors["Client-Name"] && styles.errorInput,
+                  ]}
                   placeholder="Enter client full name"
                   value={value}
                   onChangeText={onChange}
@@ -220,7 +226,11 @@ export default function NewLeadForm() {
             />
           </FormField>
 
-          <FormField label="Contact Number" required error={errors["Client-Contact"]}>
+          <FormField
+            label="Contact Number"
+            required
+            error={errors["Client-Contact"]}
+          >
             <Controller
               control={control}
               name="Client-Contact"
@@ -252,7 +262,11 @@ export default function NewLeadForm() {
             />
           </FormField>
 
-          <FormField label="Email Address" required error={errors["Client-Email"]}>
+          <FormField
+            label="Email Address"
+            required
+            error={errors["Client-Email"]}
+          >
             <Controller
               control={control}
               name="Client-Email"
@@ -265,7 +279,10 @@ export default function NewLeadForm() {
               }}
               render={({ field: { onChange, value } }) => (
                 <TextInput
-                  style={[styles.input, errors["Client-Email"] && styles.errorInput]}
+                  style={[
+                    styles.input,
+                    errors["Client-Email"] && styles.errorInput,
+                  ]}
                   placeholder="Enter email address"
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -287,13 +304,13 @@ export default function NewLeadForm() {
             <Text style={styles.sectionTitle}>Travel Information</Text>
           </View>
 
-          <FormField label="Departure City" >
+          <FormField label="Departure City">
             <Controller
               control={control}
               name="Client-DepartureCity"
               render={({ field: { onChange, value } }) => (
                 <TextInput
-                style={styles.input}
+                  style={styles.input}
                   placeholder="Enter Departure"
                   value={value}
                   onChangeText={onChange}
@@ -302,7 +319,6 @@ export default function NewLeadForm() {
               )}
             />
           </FormField>
-      
 
           {/* Multi-destination toggle */}
           {/* <ToggleSwitch
@@ -319,22 +335,26 @@ export default function NewLeadForm() {
               }
             }}
           /> */}
-     <FormField label="Destination" required error={errors["Client-Destination"]}>
-              <Controller
-                control={control}
-                name="Client-Destination"
-                rules={{ required: "Destination is required" }}
-                render={({ field: { onChange, value } }) => (
-                  <CustomPicker
-                    items={DestinationList}
-                    selectedValue={value}
-                    onValueChange={onChange}
-                    placeholder="Select destination"
-                    title="Select Destination"
-                  />
-                )}
-              />
-            </FormField>
+          <FormField
+            label="Destination"
+            required
+            error={errors["Client-Destination"]}
+          >
+            <Controller
+              control={control}
+              name="Client-Destination"
+              rules={{ required: "Destination is required" }}
+              render={({ field: { onChange, value } }) => (
+                <CustomPicker
+                  items={DestinationList}
+                  selectedValue={value}
+                  onValueChange={onChange}
+                  placeholder="Select destination"
+                  title="Select Destination"
+                />
+              )}
+            />
+          </FormField>
           {/* {!isMultiDestination ? (
             <FormField label="Destination" required error={errors["Client-Destination"]}>
               <Controller
@@ -374,7 +394,11 @@ export default function NewLeadForm() {
 
           <View style={{ flexDirection: "row", gap: 12 }}>
             <View style={{ flex: 1 }}>
-              <FormField label="Duration (Days)" required error={errors["Client-Days"]}>
+              <FormField
+                label="Duration (Days)"
+                required
+                error={errors["Client-Days"]}
+              >
                 <Controller
                   control={control}
                   name="Client-Days"
@@ -395,7 +419,11 @@ export default function NewLeadForm() {
             </View>
 
             <View style={{ flex: 1 }}>
-              <FormField label="Travel Date" required error={errors["Client-TravelDate"]}>
+              <FormField
+                label="Travel Date"
+                required
+                error={errors["Client-TravelDate"]}
+              >
                 <Controller
                   control={control}
                   name="Client-TravelDate"
@@ -502,7 +530,6 @@ export default function NewLeadForm() {
             <Text style={styles.sectionTitle}>Additional Details</Text>
           </View>
 
-  
           <FormField label="Additional Comments" error={errors.Comments}>
             <Controller
               control={control}
@@ -521,17 +548,12 @@ export default function NewLeadForm() {
               )}
             />
           </FormField>
-
-      
         </View>
 
         {/* Submit Button */}
         <TouchableOpacity
           onPress={handleSubmit(onSubmit)}
-          style={[
-            styles.submitBtn,
-            isSubmitting && styles.submitBtnDisabled
-          ]}
+          style={[styles.submitBtn, isSubmitting && styles.submitBtnDisabled]}
           disabled={isSubmitting}
         >
           <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -549,7 +571,6 @@ export default function NewLeadForm() {
           </View>
         </TouchableOpacity>
       </ScrollView>
-
     </View>
   );
 }

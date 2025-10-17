@@ -1,27 +1,33 @@
-import React, { useState, useMemo } from 'react';
-import { View, StyleSheet, TouchableOpacity, Modal, Text, Platform } from 'react-native';
+import React, { useState, useMemo, useEffect } from 'react';
+import { View, StyleSheet, TouchableOpacity, Modal, Text, Platform, ActivityIndicator } from 'react-native';
 import { printToFileAsync } from 'expo-print';
 import * as Print from 'expo-print';
 import { shareAsync } from 'expo-sharing';
 import { MaterialIcons } from '@expo/vector-icons';
 import WebView from 'react-native-webview';
+import { loadHtmlTemplate } from '../utils/loadHtmlTemplate';
 
 const QuotationPdfViewer = ({ visible, onClose, quotationData }) => {
   const [loading, setLoading] = useState(false);
-  const [selectedPrinter, setSelectedPrinter] = useState(null); // iOS only
+  const [template, setTemplate] = useState('');
+  const [selectedPrinter, setSelectedPrinter] = useState(null);
+
+  useEffect(() => {
+    const loadTemplate = async () => {
+      const html = await loadHtmlTemplate('quotation');
+      if (html) setTemplate(html);
+    };
+    loadTemplate();
+  }, []);
 
   const fmtINR = (v) => Number(v ?? 0).toLocaleString('en-IN');
   const money = (v, c) => `${c || 'INR'} ${fmtINR(v)}`;
   const clean = (s) => (s || '').replace(/<[^>]*>?/gm, '').trim();
-  const dstr = (s) => {
-    if (!s) return 'N/A';
-    const d = new Date(s);
-    return isNaN(+d)
-      ? s
-      : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(',', '');
-  };
+  const dstr = (s) => new Date(s).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(',', '');
 
   const buildHtml = (mode) => {
+    if (!template) return '';
+    
     const q = quotationData || {};
     const {
       TripId,
@@ -258,8 +264,18 @@ const QuotationPdfViewer = ({ visible, onClose, quotationData }) => {
     `;
   };
 
-  const htmlPreview = useMemo(() => buildHtml('preview'), [quotationData]);
-  const htmlPdf = useMemo(() => buildHtml('pdf'), [quotationData]);
+  const htmlPreview = useMemo(() => buildHtml('preview'), [quotationData, template]);
+  const htmlPdf = useMemo(() => buildHtml('pdf'), [quotationData, template]);
+
+  if (!template) {
+    return (
+      <Modal visible={visible} transparent={true}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4A148C" />
+        </View>
+      </Modal>
+    );
+  }
 
   const generatePdf = async () => {
     try {
@@ -361,6 +377,12 @@ const styles = StyleSheet.create({
   iconBtn: { padding: 6, borderRadius: 6, backgroundColor: '#f3f4f6' },
   preview: { flex: 1, padding: 10 },
   webview: { flex: 1, borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: '#e5e7eb' },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)'
+  },
   footer: {
     flexDirection: 'row', justifyContent: 'space-between',
     padding: 14, borderTopWidth: 1, borderTopColor: '#eee'

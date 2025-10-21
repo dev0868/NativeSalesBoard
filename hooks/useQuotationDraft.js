@@ -30,8 +30,14 @@ export function useQuotationDraft(
 
   useEffect(() => {
     (async () => {
+      console.log(`🔄 useQuotationDraft: Loading for TripId: ${tripId}`);
       const saved = tripId ? await loadQuotationDraft(tripId) : null;
-      if (saved) methods.reset({ ...(defaults), ...(saved) });
+      if (saved) {
+        console.log(`✅ useQuotationDraft: Found saved data for ${tripId}`);
+        methods.reset({ ...(defaults), ...(saved) });
+      } else {
+        console.log(`❌ useQuotationDraft: No saved data for ${tripId}`);
+      }
       setLoading(false);
     })();
   }, [tripId]);

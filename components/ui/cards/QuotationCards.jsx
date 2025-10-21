@@ -42,9 +42,15 @@ const QuotationCards = ({ leadData }) => {
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => {
+            // Generate a truly unique TripId using lead data + timestamp + random
+            const uniqueId = leadData?.TripId || 
+              leadData?.id || 
+              leadData?._id || 
+              `${leadData?.['Client-Contact'] || 'LEAD'}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            
             // Convert lead data to the format expected by the form
             const formattedLeadData = {
-              TripId: leadData?.TripId || `TRP-${Date.now()}`,
+              TripId: uniqueId,
               ClientLeadDetails: {
                 FullName: leadData?.['Client-Name'] || '',
                 Contact: leadData?.['Client-Contact'] || '',

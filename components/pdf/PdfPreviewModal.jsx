@@ -69,12 +69,12 @@ const PdfPreviewModal = ({ visible, pdfUri, pdfHtml, onClose, clientName = 'Quot
 
         {/* PDF Preview */}
         <View style={styles.pdfContainer}>
-          {loading && (
+          {/* {loading && (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#7c3aed" />
               <Text style={styles.loadingText}>Loading PDF Preview...</Text>
             </View>
-          )}
+          )} */}
           {error && (
             <View style={styles.errorContainer}>
               <Ionicons name="alert-circle" size={60} color="#ef4444" />
@@ -86,8 +86,8 @@ const PdfPreviewModal = ({ visible, pdfUri, pdfHtml, onClose, clientName = 'Quot
             <WebView
               source={{ html: pdfHtml }}
               style={styles.webview}
-              onLoadStart={() => setLoading(true)}
-              onLoadEnd={() => setLoading(false)}
+              // onLoadStart={() => setLoading(true)}
+              // onLoadEnd={() => setLoading(false)}
               onError={(e) => {
                 console.error('WebView error:', e.nativeEvent);
                 setLoading(false);

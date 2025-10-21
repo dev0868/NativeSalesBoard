@@ -89,7 +89,7 @@ import { Alert, View, ActivityIndicator, Text, StyleSheet } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import IntegratedQuotationForm from "@/components/form/IntegratedQuotationForm";
 import { clearQuotationDraft } from "@/storage/quotationDrafts";
-import { previewPdf } from "../../utils/pdfUtils";
+import { getInstantHtmlPreview } from "../../utils/pdfUtils";
 import PdfPreviewModal from "@/components/pdf/PdfPreviewModal";
 
 const QuotationScreen = () => {
@@ -100,9 +100,10 @@ const QuotationScreen = () => {
   const [pdfUri, setPdfUri] = useState(null);
   const [pdfHtml, setPdfHtml] = useState(null);
   const [showPdfModal, setShowPdfModal] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const handleFormSubmit = async (data) => {
-    if (isPrinting) return; // 🚫 prevent double print
+    if (isPrinting) return; // 🚫 prevent double submit
     setIsPrinting(true);
 
     try {
@@ -110,21 +111,24 @@ const QuotationScreen = () => {
       console.log("🗑️ Clearing draft...");
       await clearQuotationDraft(data.TripId);
       
-      console.log("📄 Generating PDF...");
-      const result = await previewPdf(data);
-      console.log("✅ PDF generated at:", result.uri);
+      console.log("⚡ Getting instant HTML preview...");
+      const result = getInstantHtmlPreview(data); // 🚀 INSTANT - no PDF generation
+      console.log("✅ HTML preview ready instantly");
       
-      if (result.uri && result.html) {
-        setPdfUri(result.uri);
+      // Force refresh to pick up any winterFellPdf changes
+      setRefreshKey(prev => prev + 1);
+      
+      if (result.html) {
+        setPdfUri(null); // 🚫 No PDF URI yet - will generate lazily
         setPdfHtml(result.html);
         setShowPdfModal(true);
-        console.log("✅ Modal opened");
+        console.log("✅ Modal opened with HTML preview");
       } else {
-        throw new Error("PDF generation failed");
+        throw new Error("HTML preview generation failed");
       }
     } catch (error) {
-      console.error("❌ Error generating quotation PDF:", error);
-      Alert.alert("Error", "Failed to generate PDF: " + (error?.message || error));
+      console.error("❌ Error generating HTML preview:", error);
+      Alert.alert("Error", "Failed to generate preview: " + (error?.message || error));
     } finally {
       setIsPrinting(false);
     }
@@ -139,12 +143,13 @@ const QuotationScreen = () => {
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingBox}>
             <ActivityIndicator size="large" color="#7c3aed" />
-            <Text style={styles.loadingText}>Generating PDF...</Text>
+            <Text style={styles.loadingText}>Preparing Preview...</Text>
           </View>
         </View>
       )}
       
       <PdfPreviewModal
+        key={refreshKey}
         visible={showPdfModal}
         pdfUri={pdfUri}
         pdfHtml={pdfHtml}

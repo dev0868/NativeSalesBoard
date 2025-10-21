@@ -90,7 +90,7 @@ export const TemplateWinterfell = (data) => {
       <div class="page">
         <div class="section-title">Package Details</div>
         <table>
-          <tr><th>Destination</th><td>${DestinationName}</td></tr>
+          <tr><th>Destinatiooood</th><td>${DestinationName}</td></tr>
           <tr><th>Name</th><td>${ClientName}</td></tr>
           <tr><th>No of Pax</th><td>${NoOfPax} Adults</td></tr>
           <tr><th>Date</th><td>${formatDate(TravelDate)}</td></tr>

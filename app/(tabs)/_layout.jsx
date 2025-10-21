@@ -83,6 +83,19 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="DevPdfPreview"
+        options={{
+          title: "PDF Dev",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons 
+              name={focused ? "code-working" : "code-working-outline"} 
+              size={24} 
+              color={color} 
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",

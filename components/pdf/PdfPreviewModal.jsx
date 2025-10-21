@@ -1,23 +1,42 @@
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, StyleSheet, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, Modal, TouchableOpacity, StyleSheet, Platform, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
 import * as Sharing from 'expo-sharing';
+import { generatePdfFromHtml } from '../../utils/pdfUtils';
 
 const PdfPreviewModal = ({ visible, pdfUri, pdfHtml, onClose, clientName = 'Quotation' }) => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = React.useState(false);
 
   const handleDownload = async () => {
     try {
-      if (pdfUri) {
-        await Sharing.shareAsync(pdfUri, {
+      setIsGeneratingPdf(true);
+      
+      let finalPdfUri = pdfUri;
+      
+      // 🐌 LAZY PDF GENERATION - Only generate PDF when user clicks download
+      if (!finalPdfUri && pdfHtml) {
+        console.log("🔄 Generating PDF from HTML for download...");
+        finalPdfUri = await generatePdfFromHtml(pdfHtml);
+        console.log("✅ PDF generated for download:", finalPdfUri);
+      }
+      
+      if (finalPdfUri) {
+        await Sharing.shareAsync(finalPdfUri, {
           UTI: '.pdf',
           mimeType: 'application/pdf',
         });
+        console.log("✅ PDF shared successfully");
+      } else {
+        throw new Error("No PDF available to share");
       }
     } catch (error) {
-      console.error('Error sharing PDF:', error);
+      console.error('❌ Error generating/sharing PDF:', error);
+      Alert.alert('Error', 'Failed to generate PDF: ' + (error?.message || error));
+    } finally {
+      setIsGeneratingPdf(false);
     }
   };
 
@@ -35,8 +54,16 @@ const PdfPreviewModal = ({ visible, pdfUri, pdfHtml, onClose, clientName = 'Quot
             <Ionicons name="close" size={24} color="#374151" />
           </TouchableOpacity>
           <Text style={styles.title}>Quotation Preview</Text>
-          <TouchableOpacity onPress={handleDownload} style={styles.downloadButton}>
-            <Ionicons name="download-outline" size={24} color="#7c3aed" />
+          <TouchableOpacity 
+            onPress={handleDownload} 
+            style={[styles.downloadButton, isGeneratingPdf && styles.downloadButtonDisabled]}
+            disabled={isGeneratingPdf}
+          >
+            {isGeneratingPdf ? (
+              <ActivityIndicator size={20} color="#7c3aed" />
+            ) : (
+              <Ionicons name="download-outline" size={24} color="#7c3aed" />
+            )}
           </TouchableOpacity>
         </View>
 
@@ -79,11 +106,21 @@ const PdfPreviewModal = ({ visible, pdfUri, pdfHtml, onClose, clientName = 'Quot
         {/* Bottom Actions */}
         <View style={styles.footer}>
           <TouchableOpacity 
-            style={styles.downloadButtonLarge}
+            style={[styles.downloadButtonLarge, isGeneratingPdf && styles.downloadButtonLargeDisabled]}
             onPress={handleDownload}
+            disabled={isGeneratingPdf}
           >
-            <Ionicons name="download" size={20} color="white" />
-            <Text style={styles.buttonText}>Download & Share PDF</Text>
+            {isGeneratingPdf ? (
+              <>
+                <ActivityIndicator size={20} color="white" />
+                <Text style={styles.buttonText}>Generating PDF...</Text>
+              </>
+            ) : (
+              <>
+                <Ionicons name="download" size={20} color="white" />
+                <Text style={styles.buttonText}>Download & Share PDF</Text>
+              </>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -121,6 +158,9 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 8,
     backgroundColor: '#f3f4f6',
+  },
+  downloadButtonDisabled: {
+    opacity: 0.6,
   },
   pdfContainer: {
     flex: 1,
@@ -180,6 +220,9 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
+  },
+  downloadButtonLargeDisabled: {
+    opacity: 0.7,
   },
   buttonText: {
     color: 'white',

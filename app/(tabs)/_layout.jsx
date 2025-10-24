@@ -25,8 +25,10 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
+      
         name="index"
         options={{
+          unmountOnBlur: true,
           title: "Quotations",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons 
@@ -38,8 +40,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+      
         name="explore"
         options={{
+          unmountOnBlur: true,
           title: "Explore",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons 
@@ -53,6 +57,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="newLeadForm"
         options={{
+          unmountOnBlur: true,
           title: "",
           tabBarIcon: ({ color }) => (
             <View className="bg-purple-500 rounded-full w-12 h-12  flex justify-center items-center shadow-lg">
@@ -65,6 +70,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="bookings"
         options={{
+          unmountOnBlur: true,
           title: "Follow Ups",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons 
@@ -82,22 +88,11 @@ export default function TabLayout() {
           title: "Create Quotation",
         }}
       />
-      <Tabs.Screen
-        name="DevPdfPreview"
-        options={{
-          title: "PDF Dev",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons 
-              name={focused ? "code-working" : "code-working-outline"} 
-              size={24} 
-              color={color} 
-            />
-          ),
-        }}
-      />
+   
       <Tabs.Screen
         name="profile"
         options={{
+          unmountOnBlur: true,
           title: "Profile",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons 

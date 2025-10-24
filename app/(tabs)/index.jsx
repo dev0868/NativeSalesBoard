@@ -11,6 +11,7 @@ export default function HomeScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
 
   const [leads, setLeads] = useState([]);
+  console.log(leads)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -31,7 +32,8 @@ export default function HomeScreen() {
         setError(null);
 
         const salesPersonUid = encodeURIComponent("Devesh bisht");
-        const url = `https://0rq0f90i05.execute-api.ap-south-1.amazonaws.com/salesapp/lead-managment/create-quote?SalesPersonUid=${salesPersonUid}`;
+        console.log(salesPersonUid)
+        const url = `https://0rq0f90i05.execute-api.ap-south-1.amazonaws.com/salesapp/lead-managment/create-quote?SalesPersonUid=${salesPersonUid}&leadstatus=LeadCreate`;
 
         const res = await fetch(url, { signal });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -40,7 +42,6 @@ export default function HomeScreen() {
         const data = parseLeads(json);
         setLeads(Array.isArray(data) ? data : []);
       } catch (e) {
-        // Abort? ignore
         if (e?.name === "AbortError") return;
         console.error("Error fetching leads:", e);
         setError(e?.message || "Failed to fetch leads");

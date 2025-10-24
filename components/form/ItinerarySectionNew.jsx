@@ -58,7 +58,7 @@ console.log(activity)
       Date: formattedDate,
       DateKey: dateKey,
       Title: `Day ${nextDay} Itinearies`,
-      Activities: "",
+      Activity: "",
       ImageUrl: "",
       Description: ""
     });
@@ -71,7 +71,7 @@ console.log(activity)
       Title: activity.Title || currentItinerary[index]?.Title || `Day ${index + 1} Itinerary`,
       Description: activity.Description || currentItinerary[index]?.Description || "",
       ImageUrl: activity.ImageUrl || currentItinerary[index]?.ImageUrl || "",
-      Activities: activity.Title || currentItinerary[index]?.Activities || ""
+      Activity: activity.Title || currentItinerary[index]?.Activity || ""
     };
     
     // Update the form with the selected activity data
@@ -145,10 +145,9 @@ console.log(activity)
           Date: formattedDate,
           DateKey: dateKey,
           Title: `Day ${dayNumber} Itinerary`,
-          Activities: "",
+          Activity: "",
           ImageUrl: "",
           Description: "",
-          ActivityId: ""
         });
       }
     } else if (targetDays < currentDays) {
@@ -274,7 +273,6 @@ console.log(activity)
                       Title: value?.Title || '',
                       Description: value?.Description || '',
                       ImageUrl: value?.ImageUrl || '',
-                      ActivityId: value?.ActivityId || ''
                     }}
                     destination={destinations?.[0]} // Assuming first destination for activity search
                   />
@@ -301,10 +299,10 @@ console.log(activity)
           </FormField>
 
           {/* Activities */}
-          <FormField label="Activities">
+          <FormField label="Activity">
             <Controller
               control={control}
-              name={`Itinearies.${index}.Activities`}
+              name={`Itinearies.${index}.Activity`}
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   style={[styles.input, styles.textArea]}

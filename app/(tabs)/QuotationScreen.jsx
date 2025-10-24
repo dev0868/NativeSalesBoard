@@ -1,88 +1,3 @@
-// // // app/QuotationScreen.tsx
-// // import React, { useState } from 'react';
-// // import { Alert, View } from 'react-native';
-// // import { useRouter, useLocalSearchParams } from 'expo-router';
-// // import IntegratedQuotationForm from '@/components/form/IntegratedQuotationForm';
-// // import { clearQuotationDraft } from '@/storage/quotationDrafts';
-
-// // const QuotationScreen = () => {
-// //   const router = useRouter();
-// //   const params = useLocalSearchParams();
-// //   const leadData = params.leadData ? JSON.parse(params.leadData) : null;
-// //   const [showPdfPreview, setShowPdfPreview] = useState(false);
-// //   const [quotationData, setQuotationData] = useState(null);
-
-// //   const handleFormSubmit = async (data) => {
-// //     console.log('Quotation Form Submitted:', data);
-// //     setQuotationData(data);
-// //     setShowPdfPreview(true);
-    
-// //     try {
-// //       // Uncomment when API is ready
-// //       // await api.createQuotation(data.TripId, data);
-// //       await clearQuotationDraft(data.TripId);
-// //     } catch (error) {
-// //       console.error('Error saving quotation:', error);
-// //       Alert.alert('Error', 'Failed to save quotation. Please try again.');
-// //     }
-// //   };
-
-// //   const handlePdfClose = () => {
-// //     setShowPdfPreview(false);
-// //     // Optionally navigate back or show success message
-// //     // router.back();
-// //     // Alert.alert('Success', 'Quotation created successfully!');
-// //   };
-
-// //   return (
-// //     <View style={{ flex: 1 }}>
-// //       <IntegratedQuotationForm
-// //         onSubmit={handleFormSubmit}
-// //         lead={leadData}
-// //       />
-      
-
-// //     </View>
-// //   );
-// // };
-
-
-
-// // export default QuotationScreen;
-
-
-// import React, { useState } from "react";
-// import { Alert, View, Button } from "react-native";
-// import { useRouter, useLocalSearchParams } from "expo-router";
-// import IntegratedQuotationForm from "@/components/form/IntegratedQuotationForm";
-// import { clearQuotationDraft } from "@/storage/quotationDrafts";
-// import { previewPdf } from "../../utils/pdfUtils";
-
-// const QuotationScreen = () => {
-//   const router = useRouter();
-//   const params = useLocalSearchParams();
-//   const leadData = params.leadData ? JSON.parse(params.leadData) : null;
-
-//   const handleFormSubmit = async (data) => {
-//     console.log("Quotation Form Submitted:", data);
-//     try {
-//       await clearQuotationDraft(data.TripId);
-//       await previewPdf(data); // 👈 opens preview
-//     } catch (error) {
-//       console.error("Error generating quotation PDF:", error);
-//       Alert.alert("Error", "Failed to generate quotation. Please try again.");
-//     }
-//   };
-
-//   return (
-//     <View style={{ flex: 1 }}>
-//       <IntegratedQuotationForm onSubmit={handleFormSubmit} lead={leadData} />
-//     </View>
-//   );
-// };
-
-// export default QuotationScreen;
-
 
 import React, { useState } from "react";
 import { Alert, View, ActivityIndicator, Text, StyleSheet } from "react-native";
@@ -105,6 +20,7 @@ const QuotationScreen = () => {
   const handleFormSubmit = async (data) => {
 
     console.log(data)
+    await clearQuotationDraft(data.TripId);
     // if (isPrinting) return; // 🚫 prevent double submit
     // setIsPrinting(true);
 

@@ -3,29 +3,45 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import { useFormContext, Controller, useFieldArray } from 'react-hook-form';
 import { Ionicons } from '@expo/vector-icons';
 import DatePicker from '@/components/ui/DatePicker';
+import MultiSelectDestinations from '@/components/ui/MultiSelectDestinations';
 
 const HotelsSection = () => {
-  const { control, formState: { errors } } = useFormContext();
+  const { control, formState: { errors }, setValue } = useFormContext();
   
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'Hotels',
   });
 
+  // Meal options for MultiSelectDestinations
+  const mealOptions = [
+    "Breakfast",
+    "Lunch", 
+    "Dinner"
+  ];
+
   const addHotel = () => {
     append({
-      nights: [],
+      nights: 0,
       name: '',
       city: '',
       roomType: '',
       category: '',
       meals: [],
       checkInDate: '',
+      checkInDateKey: null,
       checkOutDate: '',
+      checkOutDateKey: null,
       comments: '',
     });
   };
 
+  // Function to generate date key from date string
+  const generateDateKey = (dateString) => {
+    if (!dateString) return null;
+    return new Date(dateString).toISOString().slice(0, 10).replace(/-/g, '');
+  };
+// +new Date(lead?.ClientLeadDetails?.TravelDate).toISOString().slice(0,10).replace(/-/g,'')
   const removeHotel = (index) => {
     if (fields.length > 1) {
       remove(index);
@@ -119,6 +135,34 @@ const HotelsSection = () => {
               </FormField>
             </View>
             <View style={{ flex: 1 }}>
+              <FormField label="Nights" required>
+                <Controller
+                  control={control}
+                  name={`Hotels.${index}.Nights`}
+                  rules={{ 
+                    required: "Number of nights is required",
+                    min: { value: 1, message: "Nights must be at least 1" }
+                  }}
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      style={[styles.input, errors?.Hotels?.[index]?.Nights && styles.errorInput]}
+                      placeholder="Enter nights"
+                      value={value?.toString() || ''}
+                      onChangeText={(text) => {
+                        const numValue = parseInt(text) || 0;
+                        onChange(numValue);
+                      }}
+                      keyboardType="numeric"
+                      placeholderTextColor="#9ca3af"
+                    />
+                  )}
+                />
+              </FormField>
+            </View>
+          </View>
+
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            <View style={{ flex: 1 }}>
               <FormField label="Room Type">
                 <Controller
                   control={control}
@@ -161,12 +205,13 @@ const HotelsSection = () => {
                   control={control}
                   name={`Hotels.${index}.Meals`}
                   render={({ field: { onChange, value } }) => (
-                    <TextInput
-                      style={styles.input}
-                      placeholder="e.g., Breakfast, All Meals"
-                      value={value}
-                      onChangeText={onChange}
-                      placeholderTextColor="#9ca3af"
+                    <MultiSelectDestinations
+                      destinations={mealOptions}
+                      selectedDestinations={Array.isArray(value) ? value : []}
+                      onSelectionChange={(newMeals) => {
+                        onChange(newMeals);
+                      }}
+                      placeholder="Select meals"
                     />
                   )}
                 />
@@ -183,7 +228,11 @@ const HotelsSection = () => {
                   render={({ field: { onChange, value } }) => (
                     <DatePicker
                       value={value}
-                      onDateChange={onChange}
+                      onDateChange={(date) => {
+                        onChange(date);
+                        const dateKey = generateDateKey(date);
+                        setValue(`Hotels.${index}.CheckInDateKey`, dateKey);
+                      }}
                       placeholder="Select check-in date"
                       style={styles.datePickerStyle}
                     />
@@ -199,7 +248,12 @@ const HotelsSection = () => {
                   render={({ field: { onChange, value } }) => (
                     <DatePicker
                       value={value}
-                      onDateChange={onChange}
+                      onDateChange={(date) => {
+                        onChange(date);
+                        // Also update the date key
+                        const dateKey = generateDateKey(date);
+                        setValue(`Hotels.${index}.CheckOutDateKey`, dateKey);
+                      }}
                       placeholder="Select check-out date"
                       style={styles.datePickerStyle}
                     />

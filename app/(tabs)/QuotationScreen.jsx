@@ -103,35 +103,37 @@ const QuotationScreen = () => {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleFormSubmit = async (data) => {
-    if (isPrinting) return; // 🚫 prevent double submit
-    setIsPrinting(true);
 
-    try {
-      console.log("📝 Quotation Form Submitted");
-      console.log("🗑️ Clearing draft...");
-      await clearQuotationDraft(data.TripId);
+    console.log(data)
+    // if (isPrinting) return; // 🚫 prevent double submit
+    // setIsPrinting(true);
+
+    // try {
+    //   console.log("📝 Quotation Form Submitted");
+    //   console.log("🗑️ Clearing draft...");
+    //   await clearQuotationDraft(data.TripId);
       
-      console.log("⚡ Getting instant HTML preview...");
-      const result = getInstantHtmlPreview(data); // 🚀 INSTANT - no PDF generation
-      console.log("✅ HTML preview ready instantly");
+    //   console.log("⚡ Getting instant HTML preview...");
+    //   const result = getInstantHtmlPreview(data); // 🚀 INSTANT - no PDF generation
+    //   console.log("✅ HTML preview ready instantly");
       
-      // Force refresh to pick up any winterFellPdf changes
-      setRefreshKey(prev => prev + 1);
+    //   // Force refresh to pick up any winterFellPdf changes
+    //   setRefreshKey(prev => prev + 1);
       
-      if (result.html) {
-        setPdfUri(null); // 🚫 No PDF URI yet - will generate lazily
-        setPdfHtml(result.html);
-        setShowPdfModal(true);
-        console.log("✅ Modal opened with HTML preview");
-      } else {
-        throw new Error("HTML preview generation failed");
-      }
-    } catch (error) {
-      console.error("❌ Error generating HTML preview:", error);
-      Alert.alert("Error", "Failed to generate preview: " + (error?.message || error));
-    } finally {
-      setIsPrinting(false);
-    }
+    //   if (result.html) {
+    //     setPdfUri(null); // 🚫 No PDF URI yet - will generate lazily
+    //     setPdfHtml(result.html);
+    //     setShowPdfModal(true);
+    //     console.log("✅ Modal opened with HTML preview");
+    //   } else {
+    //     throw new Error("HTML preview generation failed");
+    //   }
+    // } catch (error) {
+    //   console.error("❌ Error generating HTML preview:", error);
+    //   Alert.alert("Error", "Failed to generate preview: " + (error?.message || error));
+    // } finally {
+    //   setIsPrinting(false);
+    // }
   };
 
   return (

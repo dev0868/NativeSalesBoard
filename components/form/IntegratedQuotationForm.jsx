@@ -78,7 +78,7 @@ const userData={
 
       Hotels: [
         {
-          Nights: [],
+          Nights:0,
           Name: '',
           City: '',
           RoomType: '',

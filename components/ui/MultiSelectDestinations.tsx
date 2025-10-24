@@ -28,7 +28,7 @@ export default function MultiSelectDestinations({
   disabled = false,
 }: MultiSelectDestinationsProps) {
   const [showModal, setShowModal] = useState(false);
-  const [tempSelected, setTempSelected] = useState<string[]>(selectedDestinations);
+  const [tempSelected, setTempSelected] = useState<string[]>(Array.isArray(selectedDestinations) ? selectedDestinations : []);
 
   const toggleDestination = (destination: string) => {
     if (tempSelected.includes(destination)) {
@@ -44,17 +44,18 @@ export default function MultiSelectDestinations({
   };
 
   const handleCancel = () => {
-    setTempSelected(selectedDestinations);
+    setTempSelected(Array.isArray(selectedDestinations) ? selectedDestinations : []);
     setShowModal(false);
   };
 
   const getDisplayText = () => {
-    if (selectedDestinations.length === 0) {
+    const safeSelectedDestinations = Array.isArray(selectedDestinations) ? selectedDestinations : [];
+    if (safeSelectedDestinations.length === 0) {
       return placeholder;
-    } else if (selectedDestinations.length === 1) {
-      return selectedDestinations[0];
+    } else if (safeSelectedDestinations.length === 1) {
+      return safeSelectedDestinations[0];
     } else {
-      return `${selectedDestinations.length} destinations selected`;
+      return `${safeSelectedDestinations.length} destinations selected`;
     }
   };
 
@@ -88,28 +89,29 @@ export default function MultiSelectDestinations({
         style={[styles.selector, style]}
         onPress={() => {
           if (!disabled) {
-            setTempSelected(selectedDestinations);
+            setTempSelected(Array.isArray(selectedDestinations) ? selectedDestinations : []);
             setShowModal(true);
           }
         }}
         disabled={disabled}
       >
-        <Text style={selectedDestinations.length > 0 ? styles.selectedText : styles.placeholderText}>
+        <Text style={(Array.isArray(selectedDestinations) ? selectedDestinations : []).length > 0 ? styles.selectedText : styles.placeholderText}>
           {getDisplayText()}
         </Text>
         <Ionicons name="chevron-down" size={20} color="#6b7280" />
       </TouchableOpacity>
 
       {/* Selected destinations display */}
-      {selectedDestinations.length > 0 && (
+      {(Array.isArray(selectedDestinations) ? selectedDestinations : []).length > 0 && (
         <View style={styles.selectedContainer}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {selectedDestinations.map((destination, index) => (
+            {(Array.isArray(selectedDestinations) ? selectedDestinations : []).map((destination, index) => (
               <View key={index} style={styles.selectedChip}>
                 <Text style={styles.selectedChipText}>{destination}</Text>
                 <TouchableOpacity
                   onPress={() => {
-                    const newSelected = selectedDestinations.filter(item => item !== destination);
+                    const safeSelected = Array.isArray(selectedDestinations) ? selectedDestinations : [];
+                    const newSelected = safeSelected.filter(item => item !== destination);
                     onSelectionChange(newSelected);
                   }}
                   style={styles.removeButton}

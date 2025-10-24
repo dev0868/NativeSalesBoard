@@ -24,7 +24,7 @@ console.log(activity)
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "Itinerary",
+    name: "Itinearies",
   });
 
   const days = watch("Days") || 1;
@@ -57,7 +57,7 @@ console.log(activity)
     append({
       Date: formattedDate,
       DateKey: dateKey,
-      Title: `Day ${nextDay} Itinerary`,
+      Title: `Day ${nextDay} Itinearies`,
       Activities: "",
       ImageUrl: "",
       Description: ""

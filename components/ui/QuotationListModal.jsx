@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 
 export default function QuotationListModal({
   visible,
@@ -148,7 +149,15 @@ export default function QuotationListModal({
                     </TouchableOpacity>
                     <TouchableOpacity
                       className="bg-gray-100 p-2 rounded-full"
-                      onPress={() => console.log("PDF clicked:", latest)}
+                   onPress={() =>
+                            
+                            
+                             router.push({
+              pathname: '/(tabs)/QuotationScreen',
+              params: { 
+                FollowleadData: JSON.stringify(latest)
+              }
+            })}
                     >
                       <Ionicons name="document-text" size={18} color="#6b7280" />
                     </TouchableOpacity>
@@ -221,7 +230,15 @@ export default function QuotationListModal({
                         </TouchableOpacity>
                         <TouchableOpacity
                           className="bg-gray-100 p-2 rounded-full"
-                          onPress={() => console.log("PDF clicked:", q)}
+onPress={() => {
+                            console.log('Opening quotation:', q.QuoteId);
+                            router.push({
+                              pathname: '/(tabs)/QuotationScreen',
+                              params: { 
+                                FollowleadData: JSON.stringify(q)
+                              }
+                            });
+                          }}
                         >
                           <Ionicons name="document-text" size={18} color="#6b7280" />
                         </TouchableOpacity>

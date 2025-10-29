@@ -68,7 +68,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="bookings"
+        name="followUps"
         options={{
           unmountOnBlur: true,
           title: "Follow Ups",

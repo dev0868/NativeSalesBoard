@@ -23,7 +23,7 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.deveshbisht086.jrnative"
     },
-  "jsEngine": "jsc",
+    "jsEngine": "jsc",
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
@@ -41,7 +41,8 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "./plugins/with-fixed-gradle-version"
     ],
     "experiments": {
       "typedRoutes": true,

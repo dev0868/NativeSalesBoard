@@ -20,7 +20,7 @@ const calculateTravelEndDate = (startDate, days) => {
 };
 
 const IntegratedQuotationForm = ({ onSubmit, initialData = {}, lead }) => {
-
+console.log(lead,'ttttttttttt')
   const tripId = lead?.TripId || '';
 const userData={
   CompanyId:'12345',
@@ -32,6 +32,7 @@ const userData={
   // Build defaults ONCE; changing this object each render causes RHF to rethink everything.
   const defaults = useMemo(
     () => ({
+      LeadId:lead?.LeadId,
       TripId: tripId,
       "Client-Name": lead?.ClientLeadDetails?.FullName || '',
       "Client-Contact": lead?.ClientLeadDetails?.Contact || '',

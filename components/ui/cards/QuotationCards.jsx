@@ -51,6 +51,8 @@ const QuotationCards = ({ leadData }) => {
             // Convert lead data to the format expected by the form
             const formattedLeadData = {
               TripId: uniqueId,
+              LeadId:leadData?.LeadId,
+              Quotations:leadData?.Quotations,
               ClientLeadDetails: {
                 FullName: leadData?.['Client-Name'] || '',
                 Contact: leadData?.['Client-Contact'] || '',

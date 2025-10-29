@@ -33,7 +33,7 @@ export default function HomeScreen() {
 
         const salesPersonUid = encodeURIComponent("Devesh bisht");
         console.log(salesPersonUid)
-        const url = `https://0rq0f90i05.execute-api.ap-south-1.amazonaws.com/salesapp/lead-managment/create-quote?SalesPersonUid=${salesPersonUid}&leadstatus=LeadCreate`;
+        const url = `https://0rq0f90i05.execute-api.ap-south-1.amazonaws.com/salesapp/lead-managment/create-quote?SalesPersonUid=${salesPersonUid}&SalesStatus=LeadCreate`;
 
         const res = await fetch(url, { signal });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);

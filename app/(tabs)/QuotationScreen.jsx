@@ -182,7 +182,7 @@ console.log(followUpData,'lllllll')
           ? [...leadData.Quotations, res.data.QuoteId]
           : [res.data.QuoteId],
         SalesStatus: "Cold",
-        LeadId: leadData?.LeadId,
+        LeadId: leadData?.LeadId||followUpData?.LeadId,
       };
 
       const updateRes = await axios.put(

@@ -11,8 +11,9 @@ import {
   Dimensions,
 } from "react-native";
 import DocumentModal from "../DocumentModal";
-import InvoiceModal from "../InvoiceModal";
+import InvoiceListModal from "../InvoiceListModal";
 import QuotationListModal from "../QuotationListModal";
+import { router } from "expo-router";
 
 const FollowUpCards = ({ data }) => {
   const [currentPage, setCurrentPage] = useState(0);
@@ -355,9 +356,18 @@ const FollowUpCards = ({ data }) => {
         visible={isDocumentModalVisible}
         onClose={() => setIsDocumentModalVisible(false)}
       />
-      <InvoiceModal
+      <InvoiceListModal
         visible={isInvoiceModalVisible}
         onClose={() => setIsInvoiceModalVisible(false)}
+        tripId={data?.TripId}
+        onCreateNew={() => {
+          router.push({
+            pathname: "/invoice/InvoiceScreen",
+            params: {
+              tripId: data?.TripId,
+            },
+          });
+        }}
       />
       <QuotationListModal
         visible={isQuotationModalVisible}

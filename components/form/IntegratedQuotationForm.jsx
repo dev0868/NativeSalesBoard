@@ -205,19 +205,19 @@ const IntegratedQuotationForm = ({ onSubmit, initialData = {}, lead, followUpDat
   const sourceData = followUpData || lead;
   const client = followUpData
     ? {
-        FullName: sourceData["Client-Name"],
-        Contact: sourceData["Client-Contact"],
-        Email: sourceData["Client-Email"],
-        TravelDate: sourceData["Client-TravelDate"],
-        Pax: sourceData["Client-Pax"],
-        Child: sourceData["Client-Child"],
-        Infant: sourceData["Client-Infant"],
-        Budget: sourceData["Client-Budget"],
-        DepartureCity: sourceData["Client-DepartureCity"],
-        DestinationName: sourceData["Client-Destination"],
-        Destinations:
-          sourceData["Client-Destinations"] || [sourceData["Client-Destination"]],
-        Days: sourceData["Client-Days"],
+        FullName: followUpData["Client-Name"],
+        Contact: followUpData["Client-Contact"],
+        Email: followUpData["Client-Email"],
+        TravelDate: followUpData.TravelDate,
+        Pax: followUpData.NoOfPax,
+        Child: followUpData.Child,
+        Infant: followUpData.Infant,
+        Budget: followUpData.Budget,
+        DepartureCity: followUpData.DepartureCity,
+        DestinationName: followUpData.DestinationName,
+        Destinations: followUpData.Destinations || [followUpData.DestinationName],
+        Days: followUpData.Days,
+        IsMultiDestination: followUpData.IsMultiDestination,
       }
     : sourceData?.ClientLeadDetails || {};
 
@@ -245,9 +245,9 @@ const IntegratedQuotationForm = ({ onSubmit, initialData = {}, lead, followUpDat
         client?.Destinations || (client?.DestinationName ? [client.DestinationName] : []),
       Days: client?.Days || 2,
       Nights: client?.Days ? client.Days - 1 : 1,
-      PriceType: "Total",
-      Currency: "INR",
-      Costs: {
+      PriceType: followUpData?.PriceType || "Total",
+      Currency: followUpData?.Currency || "INR",
+      Costs: followUpData?.Costs || {
         LandPackageCost: 0,
         VisaCost: 0,
         FlightCost: 0,
@@ -256,10 +256,10 @@ const IntegratedQuotationForm = ({ onSubmit, initialData = {}, lead, followUpDat
         TotalCost: 0,
         TotalTax: 0,
       },
-      GST: { Enabled: true, WaivedOffAmount: 0, WaivedOffOtps: [] },
-      TCS: { Enabled: true, WaivedOffAmount: 0, WaivedOffOtps: [] },
-      Images: { Inclusions: [], Flights: [] },
-      Hotels: [
+      GST: followUpData?.GST || { Enabled: true, WaivedOffAmount: 0, WaivedOffOtps: [] },
+      TCS: followUpData?.TCS || { Enabled: true, WaivedOffAmount: 0, WaivedOffOtps: [] },
+      Images: followUpData?.Images || { Inclusions: [], Flights: [] },
+      Hotels: followUpData?.Hotels || [
         {
           Nights: 0,
           Name: "",
@@ -274,9 +274,9 @@ const IntegratedQuotationForm = ({ onSubmit, initialData = {}, lead, followUpDat
           Comments: "",
         },
       ],
-      Inclusions: [],
-      Exclusions: [],
-      Itinearies: [
+      Inclusions: followUpData?.Inclusions || [],
+      Exclusions: followUpData?.Exclusions || [],
+      Itinearies: followUpData?.Itinearies || [
         {
           Date: "",
           DateKey: null,
@@ -297,11 +297,18 @@ const IntegratedQuotationForm = ({ onSubmit, initialData = {}, lead, followUpDat
         : null,
       ...initialData,
     }),
-    [sourceData, client, initialData]
+    [followUpData?.QuoteId, lead?.TripId, tripId, initialData]
   );
 
   // ------------------ Hook for autosave draft -------------------
-  const { methods, loading } = useQuotationDraft(tripId, defaults);
+  // Skip loading cached draft when opening existing quotation (followUpData exists)
+  // Pass QuoteId as uniqueId to track when quotation changes
+  const { methods, loading } = useQuotationDraft(
+    tripId, 
+    defaults, 
+    !!followUpData,
+    followUpData?.QuoteId
+  );
 
   const sections = useMemo(
     () => [

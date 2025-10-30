@@ -149,15 +149,18 @@ export default function QuotationListModal({
                     </TouchableOpacity>
                     <TouchableOpacity
                       className="bg-gray-100 p-2 rounded-full"
-                   onPress={() =>
-                            
-                            
-                             router.push({
-              pathname: '/(tabs)/QuotationScreen',
-              params: { 
-                FollowleadData: JSON.stringify(latest)
-              }
-            })}
+                      onPress={() => {
+                        console.log('Opening latest quotation:', latest.QuoteId);
+                        onClose();
+                        setTimeout(() => {
+                          router.push({
+                            pathname: '/(tabs)/QuotationScreen',
+                            params: { 
+                              FollowleadData: JSON.stringify(latest)
+                            }
+                          });
+                        }, 100);
+                      }}
                     >
                       <Ionicons name="document-text" size={18} color="#6b7280" />
                     </TouchableOpacity>
@@ -230,14 +233,17 @@ export default function QuotationListModal({
                         </TouchableOpacity>
                         <TouchableOpacity
                           className="bg-gray-100 p-2 rounded-full"
-onPress={() => {
+                          onPress={() => {
                             console.log('Opening quotation:', q.QuoteId);
-                            router.push({
-                              pathname: '/(tabs)/QuotationScreen',
-                              params: { 
-                                FollowleadData: JSON.stringify(q)
-                              }
-                            });
+                            onClose();
+                            setTimeout(() => {
+                              router.push({
+                                pathname: '/(tabs)/QuotationScreen',
+                                params: { 
+                                  FollowleadData: JSON.stringify(q)
+                                }
+                              });
+                            }, 100);
                           }}
                         >
                           <Ionicons name="document-text" size={18} color="#6b7280" />

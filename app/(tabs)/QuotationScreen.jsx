@@ -146,6 +146,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import IntegratedQuotationForm from "@/components/form/IntegratedQuotationForm";
 import { clearQuotationDraft } from "@/storage/quotationDrafts";
 import PdfPreviewModal from "@/components/pdf/PdfPreviewModal";
+import { getInstantHtmlPreview } from "../../utils/pdfUtils";
 import axios from "axios";
 
 const QuotationScreen = () => {
@@ -165,51 +166,63 @@ console.log(followUpData,'lllllll')
     setIsPrinting(true);
 
     try {
-      console.log("📝 Submitting quotation data...", data);
+      console.log("📝 Generating HTML preview...", data);
 
-      // 1️⃣ Create quotation
+      // 1️⃣ Generate instant HTML preview
+      const result = getInstantHtmlPreview(data);
+      setPdfHtml(result.html);
+      setPdfUri(null); // No PDF yet, only HTML
+      setShowPdfModal(true);
+      setRefreshKey((prev) => prev + 1);
+
+      console.log("✅ HTML preview ready");
+      setIsPrinting(false);
+
+      // Note: Actual submission will happen when user closes the preview
+      // or we can add a submit button in the preview modal
+    } catch (error) {
+      console.error("❌ Error generating preview:", error);
+      Alert.alert("Error", "Failed to generate preview. Please try again.");
+      setIsPrinting(false);
+    }
+  };
+
+  const handlePreviewClose = async () => {
+    setShowPdfModal(false);
+    
+    // Optional: Submit after preview is closed
+    // Uncomment if you want to auto-submit after preview
+    /*
+    try {
+      const data = pdfHtml; // You'll need to store the form data
+      
       const res = await axios.post(
         "https://0rq0f90i05.execute-api.ap-south-1.amazonaws.com/salesapp/lead-managment/quotations",
         data
       );
 
-      console.log("✅ Quotation created:", res.data);
-
-      // 2️⃣ Update lead with new quote
       const updateData = {
         TripId: res?.data?.TripId,
         Quotations: Array.isArray(leadData?.Quotations)
           ? [...leadData.Quotations, res.data.QuoteId]
           : [res.data.QuoteId],
         SalesStatus: "Cold",
-        LeadId: leadData?.LeadId||followUpData?.LeadId,
+        LeadId: leadData?.LeadId || followUpData?.LeadId,
       };
 
-      const updateRes = await axios.put(
+      await axios.put(
         "https://0rq0f90i05.execute-api.ap-south-1.amazonaws.com/salesapp/lead-managment/create-quote",
         updateData
       );
 
-      console.log("✅ Quote updated successfully:", updateRes.data);
-
       await clearQuotationDraft(data.TripId);
-
       Alert.alert("Success", "Quotation created and updated successfully!");
       router.replace("/(tabs)");
     } catch (error) {
-      console.error("❌ Error in handleFormSubmit:", {
-        error: error.message,
-        response: error.response?.data,
-      });
-
-      Alert.alert(
-        "Error",
-        error.response?.data?.message ||
-          "Failed to process quotation. Please try again."
-      );
-    } finally {
-      setIsPrinting(false);
+      console.error("❌ Error submitting:", error);
+      Alert.alert("Error", "Failed to submit quotation.");
     }
+    */
   };
 
   return (
@@ -235,7 +248,7 @@ console.log(followUpData,'lllllll')
         visible={showPdfModal}
         pdfUri={pdfUri}
         pdfHtml={pdfHtml}
-        onClose={() => setShowPdfModal(false)}
+        onClose={handlePreviewClose}
         clientName={
           followUpData?.["Client-Name"] ||
           leadData?.ClientLeadDetails?.FullName ||

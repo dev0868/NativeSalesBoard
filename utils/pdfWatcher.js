@@ -9,14 +9,24 @@ export const forceRefreshTemplate = () => {
   console.log('🔄 Template refresh forced, counter:', refreshCounter);
 };
 
-// Get template with simple cache busting
+// Get template with cache busting
 export const getTemplateWithCacheBust = () => {
-  // Always import fresh - React Native will handle the module resolution
   console.log('🔄 Loading template, refresh counter:', refreshCounter);
   
-  // Direct import - React Native Metro bundler handles hot reloading
-  const { TemplateWinterfell } = require('../components/pdf/winterFellPdf');
-  return TemplateWinterfell;
+  // Clear require cache to force fresh import
+  const modulePath = '../components/pdf/winterFellPdf';
+  const resolvedPath = require.resolve(modulePath);
+  
+  // Delete from cache
+  if (require.cache[resolvedPath]) {
+    delete require.cache[resolvedPath];
+    console.log('🗑️ Cleared cache for:', resolvedPath);
+  }
+  
+  // Fresh import
+  const { TemplateJourneyRouters } = require(modulePath);
+  console.log('✅ Template loaded fresh');
+  return TemplateJourneyRouters;
 };
 
 // Get current refresh counter
